@@ -1,0 +1,35 @@
+这是 OSM 铁路网络项目。全国真实数据还没有在云端运行；请在你的电脑上处理已有地图。
+
+1. 下载并安装 Python 3.12.10 Windows 64 位：
+   https://www.python.org/downloads/release/python-31210/
+   页面底部 Files 中选 Windows installer (64-bit)。
+   安装首屏勾选 Add python.exe to PATH，保留 Python Launcher，点 Install Now。
+
+2. 将项目 ZIP 全部解压。不要在压缩包里直接运行。
+   文件夹可以含中文和空格，例如 D:\人工智能作业\铁路 项目\OSM_Railway_Project。
+
+3. 双击 install.bat。等它显示“安装完成”，再按键关闭。
+   依赖装到项目自己的 .venv，不需要你操作 Python 命令行。
+
+4. 将你下载的文件复制到 data\raw\：
+   china-latest.osm.pbf
+   taiwan-latest.osm.pbf
+
+5. 可选双击 test_windows.bat 检查小型测试；这不是全国结果。
+
+6. 双击 run.bat。它自动用 .venv 环境，不强制联网下载。
+   保持电脑通电，避免休眠；首次扫描较久。建议关闭占内存较多的程序。
+   当前约 16 GB 可用内存可以尝试；全国数据峰值未实测，不保证一定足够。
+
+7. 看到“处理完成”后，查看：
+   outputs\run_status.json：应为 completed_real_osm。
+   outputs\RESULTS.md：统计和广州至兰州可达性。
+   outputs\figures\：网络图、车站检查图，成功找到路径时有路线图。
+   outputs\*.csv 和 *.geojson：数据文件。
+   outputs\submission\OSM_Railway_Results.zip：成果包，不含原始 PBF。
+
+8. 若报错，窗口不会立即关闭。查看 logs\ 中最新的 run 和 errors 日志。
+   可把日志内容发回排查，不需要上传大型 PBF。
+
+详细步骤、Python 安装选项和排错说明请阅读 WINDOWS_GUIDE.md。
+所有长度都是“基于 OSM 铁路线形计算的几何里程”，不是官方客运或计价里程。

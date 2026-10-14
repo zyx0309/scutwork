@@ -1,0 +1,22 @@
+{
+  "validated_at": "2026-10-14T12:32:23.676403+00:00",
+  "python": "3.12.14",
+  "execution_os": "Linux",
+  "unit_tests": {
+    "executed": 14,
+    "passed": 14,
+    "failed": 0
+  },
+  "syntax_compile": "passed",
+  "pip_check": "passed",
+  "windows_x64_python312_wheels": "all_19_pinned_packages_available",
+  "full_fixture_pipeline_with_plotting_and_zip": "passed_in_Chinese_and_space_path",
+  "error_logging_and_nonzero_exit": "passed_in_Chinese_and_space_path",
+  "windows_batch_executed": false,
+  "national_real_pbf_processing_executed": false,
+  "national_peak_memory_measured": false,
+  "note": "人工测试 PBF 不作为真实全国数据，不提供全国路线、公里数或站点映射统计。",
+  "final_deliverable_extracted_pipeline_check": "passed",
+  "fixture_png_svg_pairs": 5,
+  "isolated_project_venv_checked": true
+}
