@@ -24,6 +24,7 @@ FONT_URL='https://raw.githubusercontent.com/notofonts/noto-cjk/main/Sans/Variabl
 FONT_SHA='d68bafcb48a2707749396aa12bbbd833cb70401f3a9a689fd2902c7e0d295964'
 TITLE='基于OpenStreetMap的省级行政区代表城市铁路网络构建及最短几何路径分析'
 SUBTITLE='《人工智能》课程大作业 · 第一阶段真实数据实验与质量核验'
+COVER_NOTE='数据核验稿：保留已确认站点错配与待复核项'
 ATTR='© OpenStreetMap contributors · ODbL 1.0'
 
 def font_file():
@@ -41,7 +42,7 @@ def font_file():
     font.save(target)
     return target
 
-def draw_figures(data,font,diagnostic=None):
+def draw_figures(data,font,diagnostic=None,current=False):
     import os
     os.environ.setdefault('MPLCONFIGDIR',str(PROJECT/'.cache/report-matplotlib'))
     import matplotlib
@@ -84,36 +85,63 @@ def draw_figures(data,font,diagnostic=None):
         writer=csv.DictWriter(f,fieldnames=['edge_id','city_a','city_b','distance_km']); writer.writeheader()
         writer.writerows({k:r[k] for k in writer.fieldnames} for r in forest)
     isolated=set(q['city_graph']['isolated_cities'])
-    for name,chosen,heading in [('network_full',edges,'34城市完整连接图：351条边'),
-                                ('network_display',forest,'清晰展示图：几何里程最小生成森林（26条展示边）')]:
+    for name,chosen,heading in [('network_full',edges,f'34城市完整连接图：{len(edges)}条边'),
+                                ('network_display',forest,f'清晰展示图：几何里程最小生成森林（{len(forest)}条展示边）')]:
         fig,ax=plt.subplots(figsize=(13.2,8.4))
+        pending_labels=[]
         for edge in chosen:
             a,b=coordinates[edge['city_a']],coordinates[edge['city_b']]
             focal={edge['city_a'],edge['city_b']}=={'广州','兰州'}
             ax.plot([a[0],b[0]],[a[1],b[1]],color='#d34c41' if focal else '#527f94',
                     lw=1.5 if focal else .9 if name=='network_display' else .45,alpha=.9 if focal else .85 if name=='network_display' else .16)
             if name=='network_display':
-                ax.annotate(f"{float(edge['distance_km']):.1f}",((a[0]+b[0])/2,(a[1]+b[1])/2),
+                midpoint=((a[0]+b[0])/2,(a[1]+b[1])/2)
+                if current:
+                    pending_labels.append((edge,midpoint));continue
+                ax.annotate(f"{float(edge['distance_km']):.1f}",midpoint,
                         xytext=weight_offset.get(edge['edge_id'],(0,0)),textcoords='offset points',
                         fontsize=10,color='#24536b',ha='center',
                         bbox={'facecolor':'white','alpha':.8,'edgecolor':'none','pad':.5})
         for city,point in coordinates.items():
-            color='#b52930' if city in {'广州','兰州','福州'} else '#df9a27' if city in isolated else '#2c6887'
+            color='#b52930' if city in ({'广州','兰州'} if current else {'广州','兰州','福州'}) else '#df9a27' if city in isolated else '#2c6887'
             ax.scatter(*point,s=48 if city in {'广州','兰州'} else 27,c=color,zorder=4,edgecolors='white',linewidths=.5)
-            label=city+'*' if city=='福州' else city
+            label=city+'*' if city=='福州' and not current else city
             text=ax.annotate(label,point,xytext=offset.get(city,(6,6)),textcoords='offset points',fontsize=13,zorder=5)
             text.set_path_effects([patheffects.withStroke(linewidth=2.8,foreground='white')])
         ax.set_title(heading,pad=15); ax.set_xlabel('经度（OSM城市布局点）'); ax.set_ylabel('纬度（OSM城市布局点）')
         ax.set_xlim(84,130); ax.set_ylim(18,49); ax.grid(alpha=.16); fig.subplots_adjust(bottom=.15)
-        finish(fig,name,('仅展示图简化；完整计算图保持351条边。图中数字为km。' if name=='network_display' else '线段仅为抽象城市边，不表示实际轨道走向；红线为广州—兰州城市边。')+
-               (' 橙色为孤立城市；福州*有已确认交通方式错配。' if diagnostic else ' 橙色为孤立城市；福州*有已确认站名错配。'))
+        if pending_labels:
+            # Place current-run distance labels after city labels; old edge IDs changed.
+            fig.canvas.draw(); renderer=fig.canvas.get_renderer()
+            occupied=[t.get_window_extent(renderer).expanded(1.08,1.16) for t in ax.texts]
+            for edge,midpoint in pending_labels:
+                annotation=ax.annotate(f"{float(edge['distance_km']):.1f}",midpoint,xytext=(0,0),
+                    textcoords='offset points',fontsize=9.5,color='#24536b',ha='center',va='center',
+                    bbox={'facecolor':'white','alpha':.88,'edgecolor':'none','pad':.5})
+                best=None
+                for dy in [0,8,-8,16,-16,24,-24,32,-32,40,-40]:
+                    for dx in [0,10,-10,20,-20,30,-30,40,-40]:
+                        annotation.set_position((dx,dy));box=annotation.get_window_extent(renderer).expanded(1.1,1.2)
+                        overlap=sum(max(0,min(box.x1,b.x1)-max(box.x0,b.x0))*max(0,min(box.y1,b.y1)-max(box.y0,b.y0)) for b in occupied)
+                        score=overlap*100+dx*dx+dy*dy
+                        if best is None or score<best[0]:best=(score,dx,dy,box)
+                _,dx,dy,box=best;annotation.set_position((dx,dy));occupied.append(box)
+                if abs(dx)+abs(dy)>12:
+                    ax.annotate('',midpoint,xytext=(dx,dy),textcoords='offset points',
+                                arrowprops={'arrowstyle':'-','lw':.45,'color':'#6b8c9c'},zorder=1)
+        finish(fig,name,(f'仅展示图简化；完整计算图保持{len(edges)}条边。图中数字为km。' if name=='network_display' else '线段仅为抽象城市边，不表示实际轨道走向；红线为广州—兰州城市边。')+
+               (' 橙色为孤立城市。' if current else ' 橙色为孤立城市；福州*有已确认交通方式错配。' if diagnostic else ' 橙色为孤立城市；福州*有已确认站名错配。'))
     fig,ax=plt.subplots(figsize=(10.8,4.6))
     labels=['空间匹配待复核','拓扑/关系匹配（其余）','已确认模式错配：福州' if diagnostic else '已确认身份错配：福州','轨道接入未成功','无重铁代表站']
     values=[24,5,1,3,1]
+    if current:
+        labels=['空间匹配待复核','拓扑/关系匹配','轨道接入未成功','无重铁代表站']
+        counts=Counter(r['match_status'] for r in stations)
+        values=[counts[k] for k in ['spatial_match_needs_review','topology_matched','station_found_no_reliable_track_match','no_heavy_rail_representative_selected']]
     bars=ax.barh(labels[::-1],values[::-1],color=['#7e8f98','#c2a064','#c7443f','#4f819b','#d9a33a'])
     for bar in bars: ax.text(bar.get_width()+.3,bar.get_y()+bar.get_height()/2,str(int(bar.get_width())),va='center')
     ax.set_xlim(0,27); ax.set_xlabel('城市数量'); ax.set_title('34城市代表站自动匹配结果及审计修正口径')
-    fig.tight_layout(rect=(0,.14,1,1)); finish(fig,'mapping_status','6个拓扑/关系匹配标签中含1个已确认错配；自动接入30不等于正确性全部通过。')
+    fig.tight_layout(rect=(0,.14,1,1)); finish(fig,'mapping_status','自动接入30，其中25个为空间匹配待复核；模式筛查不等于全部股道人工验收。' if current else '6个拓扑/关系匹配标签中含1个已确认错配；自动接入30不等于正确性全部通过。')
     if diagnostic:
         evidence=diagnostic['evidence']['福州']; selected=evidence['selected_track_node']['data']
         train=next(c for c in evidence['name_candidates'] if c['osm_id']==6999105218)
@@ -124,13 +152,19 @@ def draw_figures(data,font,diagnostic=None):
             if way['source']=='china-latest.osm.pbf' and all(n in node_xy for n in refs):
                 geometry=np.asarray([node_xy[n] for n in refs]);ax.plot(geometry[:,0],geometry[:,1],color='#7795a2',lw=1.1)
         ax.scatter(selected['lon'],selected['lat'],s=80,c='#bd3333',zorder=4)
-        ax.annotate('本轮误选停靠点：subway=yes\nnode 9521844144',
+        ax.annotate('本轮国铁轨道锚点\nnode 2451343981' if current else '本轮误选停靠点：subway=yes\nnode 9521844144',
                     (selected['lon'],selected['lat']),xytext=(15,-33),textcoords='offset points',fontsize=11,color='#a32b2b')
         x,y=train['data']['lon'],train['data']['lat'];ax.scatter(x,y,s=90,c='#25816f',marker='s',zorder=4)
-        ax.annotate('国铁站候选：train=yes\nnode 6999105218（未补造锚点）',(x,y),xytext=(12,10),textcoords='offset points',fontsize=11,color='#246c5b')
-        ax.set(xlim=(119.305,119.33),ylim=(26.108,26.123),xlabel='经度',ylabel='纬度',title='福州同名站交通方式核验：国铁站与滨海快线停靠点')
+        ax.annotate('本轮国铁代表站：train=yes\nnode 6999105218；匹配34.333 m' if current else '国铁站候选：train=yes\nnode 6999105218（未补造锚点）',(x,y),xytext=(12,10),textcoords='offset points',fontsize=11,color='#246c5b')
+        if current:
+            for way in evidence['incident_rail_ways']:
+                refs=way['data']['refs']
+                if 2451343981 in refs:
+                    line=np.asarray([node_xy[n] for n in refs]);ax.plot(line[:,0],line[:,1],lw=2,color='#256d8a',label=way['data']['tags']['name'])
+            ax.legend(loc='upper left',fontsize=11)
+        ax.set(xlim=(119.305,119.33),ylim=(26.108,26.123),xlabel='经度',ylabel='纬度',title='福州本轮国铁代表站与实际轨道锚点' if current else '福州同名站交通方式核验：国铁站与滨海快线停靠点')
         ax.ticklabel_format(useOffset=False);ax.grid(alpha=.2);fig.subplots_adjust(bottom=.18)
-        finish(fig,'fuzhou_diagnostic','灰线为诊断包中的实际滨海快线片段；不是国铁福州站完整站场。未绘制两站间虚构连接。')
+        finish(fig,'fuzhou_diagnostic','蓝线为锚点所在线路福平线、合福高速线；灰线为其他诊断片段。仅绘制实际坐标，不补造接驳边。' if current else '灰线为诊断包中的实际滨海快线片段；不是国铁福州站完整站场。未绘制两站间虚构连接。')
         fig,axes=plt.subplots(2,3,figsize=(13,9.5))
         for ax,city in zip(axes.flat,['福州','南京','兰州','天津','贵阳','西宁']):
             e=diagnostic['evidence'][city];row=e['selected_station_csv']
@@ -402,7 +436,7 @@ def render_word(blocks,path):
     run=cover.add_run(TITLE); run.font.size=Pt(23); run.bold=True; run.font.color.rgb=RGBColor.from_string('204A64')
     cover=document.add_paragraph(SUBTITLE); cover.alignment=WD_ALIGN_PARAGRAPH.CENTER
     document.add_paragraph('2026—2027学年第1学期').alignment=WD_ALIGN_PARAGRAPH.CENTER
-    document.add_paragraph('数据核验稿：保留已确认站点错配与待复核项').alignment=WD_ALIGN_PARAGRAPH.CENTER
+    document.add_paragraph(COVER_NOTE).alignment=WD_ALIGN_PARAGRAPH.CENTER
     document.add_paragraph('')
     for label in ['姓名','学号','专业班级','学院','任课教师','提交日期','学生签名']:
         document.add_paragraph(label+'：____________________________').alignment=WD_ALIGN_PARAGRAPH.CENTER
@@ -465,7 +499,7 @@ def render_pdf(blocks,path,font):
     def para(s,style=normal): return Paragraph(html.escape(str(s)).replace('\n','<br/>'),style)
     usable=164*mm; story=[Spacer(1,15*mm),para('《人工智能》课程大作业',centered),Spacer(1,5*mm),para(TITLE,cover_title),
         para(SUBTITLE,centered),para('2026—2027学年第1学期',centered),Spacer(1,5*mm),
-        para('数据核验稿：保留已确认站点错配与待复核项',centered),Spacer(1,7*mm)]
+        para(COVER_NOTE,centered),Spacer(1,7*mm)]
     for label in ['姓名','学号','专业班级','学院','任课教师','提交日期','学生签名']: story.append(para(label+'：________________________',centered))
     story.extend([Spacer(1,5*mm),para('真实运行结果日期：2026年10月15日（北京时间）',centered),PageBreak()])
     for block in blocks:
@@ -504,15 +538,22 @@ def render_pdf(blocks,path,font):
     doc.build(story,onFirstPage=footer,onLaterPages=footer)
 
 def main():
-    global OUTPUT_ROOT,SUBTITLE
+    global OUTPUT_ROOT,SUBTITLE,COVER_NOTE
     parser=argparse.ArgumentParser();parser.add_argument('--input',type=Path,default=ROOT/'input')
     parser.add_argument('--output-root',type=Path,default=ROOT)
     args=parser.parse_args();OUTPUT_ROOT=args.output_root.resolve();OUTPUT_ROOT.mkdir(parents=True,exist_ok=True)
     folder=args.input.resolve(); audit=verify(folder)
     diagnostic=json.loads((folder/'station_diagnostics.json').read_text(encoding='utf-8-sig')) if (folder/'station_diagnostics.json').exists() else None
-    if diagnostic and (not audit.get('confirmed_fuzhou_wrong_transport_mode') or audit['source_graph_version']!=5 or audit['source_station_identity_version']!=2):
+    current=(audit['source_graph_version'],audit['source_station_identity_version'])==(6,3)
+    if current:
+        from reviewed_report import validate_snapshot
+        validate_snapshot(folder,args.output_root.resolve()/'REVIEWED_SNAPSHOT.json')
+    elif diagnostic and (not audit.get('confirmed_fuzhou_wrong_transport_mode') or audit['source_graph_version']!=5 or audit['source_station_identity_version']!=2):
         raise ValueError('This diagnosed report profile describes the graph-5/identity-2 snapshot. New results require reviewing and updating the report, not reusing old conclusions.')
     if diagnostic:SUBTITLE='《人工智能》课程大作业 · 第二轮真实数据与交通方式审计'
+    if current:
+        SUBTITLE='《人工智能》课程大作业 · 第三轮真实数据与修正后质量核验'
+        COVER_NOTE='真实数据核验稿：已修正模式误选，保留空间匹配待复核项'
     (OUTPUT_ROOT/'independent_audit.json').write_text(json.dumps(audit,ensure_ascii=False,indent=2),encoding='utf-8')
     q=json.loads((folder/'data_quality.json').read_text(encoding='utf-8-sig'))
     data=(csv_rows(folder/'cities.csv'),csv_rows(folder/'city_stations.csv'),csv_rows(folder/'city_edges.csv'),csv_rows(folder/'guangzhou_lanzhou_segments.csv'),q)
@@ -525,15 +566,29 @@ def main():
         if diagnostic:
             row['identified_train_station_osm_type']='node' if rejected else ''
             row['identified_train_station_osm_id']='6999105218' if rejected else ''
+        if current:
+            row['audit_identity_status']={'spatial_match_needs_review':'name_mode_screened_spatial_anchor_pending_review',
+                'topology_matched':'name_mode_screened_topological_anchor',
+                'station_found_no_reliable_track_match':'station_identified_anchor_unresolved',
+                'no_heavy_rail_representative_selected':'no_heavy_rail_representative'}[row['match_status']]
+            row['audit_note']={'spatial_match_needs_review':'原始名称与模式标签已筛查，偏移独立复算；股道仍待完整站场复核',
+                'topology_matched':'保留真实节点或站场关系连接；不表示运营条件全部验证',
+                'station_found_no_reliable_track_match':'保留真实站名、OSM对象与坐标；不补造锚点或连接',
+                'no_heavy_rail_representative_selected':'保留城市；无本项目口径的重铁代表站'}[row['match_status']]
+            if row['city']=='福州':row['audit_note']+='；本轮国铁站train=yes，锚点属于福平线和合福高速线'
         audited.append(row)
     with (OUTPUT_ROOT/'audited_city_stations.csv').open('w',encoding='utf-8-sig',newline='') as f:
         writer=csv.DictWriter(f,fieldnames=list(audited[0])); writer.writeheader(); writer.writerows(audited)
-    font=font_file(); images,forest=draw_figures(data,font,diagnostic)
+    font=font_file(); images,forest=draw_figures(data,font,diagnostic,current=current)
     if diagnostic:
         for name in ['guangzhou_lanzhou_route.png','station_checks_detail.png']:
             shutil.copy2(folder/'figures'/name,OUTPUT_ROOT/'figures'/name)
         images['actual_route']=OUTPUT_ROOT/'figures/guangzhou_lanzhou_route.png'
-    blocks=build_content(data,audit,images,forest,diagnostic); target=OUTPUT_ROOT/'deliverables'; target.mkdir(exist_ok=True)
+    if current:
+        from reviewed_report import build_current_content
+        blocks=build_current_content(data,audit,images,forest,diagnostic)
+    else:blocks=build_content(data,audit,images,forest,diagnostic)
+    target=OUTPUT_ROOT/'deliverables'; target.mkdir(exist_ok=True)
     render_word(blocks,target/'AI_Railway_Report_Audited.docx')
     render_pdf(blocks,target/'AI_Railway_Report_Audited.pdf',font)
     md=['# '+TITLE,'\n'+SUBTITLE]

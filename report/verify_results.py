@@ -79,6 +79,8 @@ def verify(folder=ROOT/'input'):
       'city_count':len(stations),'city_order_matches':True,'edge_count':len(edges),'invalid_edges':[],
       'duplicate_city_edges':[],'independently_recomputed_components':components,'component_count':len(components),
       'degree':{c:len(graph[c]) for c in CITY_ORDER},
+      'largest_city_component_size':max(map(len,components)),
+      'largest_city_component_is_complete':all(len(graph[c])==len(components[0])-1 for c in components[0]),
       'mainland_component_is_complete_K27':len(components[0])==27 and all(len(graph[c])==26 for c in components[0]),
       'independent_city_graph_dijkstra_km':distance,'city_graph_dijkstra_city_sequence':path,
       'reported_base_graph_km':route['total_km'],'difference_from_reported_base_km':distance-route['total_km'],
@@ -93,6 +95,46 @@ def verify(folder=ROOT/'input'):
       'candidate_mappings_after_rejecting_known_error':sum(r['component_id']!='' for r in stations)-int(wrong or mode_wrong),
       'raw_geodesic_recomputation_performed_here':False,
       'scope':'City/segment tables and optional raw station diagnostics; complete track geometries and PBF have not been independently re-read here.'}
+    # New exports retain the exact mode tags, including for stations without anchors.
+    if state.get('station_identity_version',0)>=3:
+        from pyproj import Geod
+        from railway.extract import excluded_transport_mode
+        geod=Geod(ellps='WGS84'); offsets={}; bad_modes=[]; incident={}
+        for row in stations:
+            if not row['track_node_id']: continue
+            station_tags=json.loads(row['station_raw_tags']);track_tags=json.loads(row['track_node_raw_tags'])
+            if excluded_transport_mode(station_tags) or excluded_transport_mode(track_tags):
+                bad_modes.append(row['city'])
+            _,_,offset=geod.inv(float(row['station_longitude']),float(row['station_latitude']),
+                               float(row['track_longitude']),float(row['track_latitude']))
+            if abs(offset-float(row['match_distance_m']))>0.000501:
+                raise ValueError('Station offset does not match coordinates: '+row['city'])
+            offsets[row['city']]=offset
+        if bad_modes: raise ValueError('Explicit excluded transport mode on selected anchors: '+str(bad_modes))
+        if diagnostic:
+            if diagnostic['extraction_fingerprint']!=q['data_extraction']['fingerprint']:
+                raise ValueError('Diagnostic extraction fingerprint differs')
+            by_city={r['city']:r for r in stations}
+            for city,evidence in diagnostic['evidence'].items():
+                if evidence['selected_station_csv']!=by_city[city]:
+                    raise ValueError('Diagnostic station row differs: '+city)
+                anchor=by_city[city]['track_node_id']; ways=[]
+                xy={n['osm_id']:(n['lon'],n['lat']) for n in evidence['track_node_coordinates']}
+                for way in evidence['incident_rail_ways']:
+                    refs=way['data']['refs']
+                    if not anchor or int(anchor) not in refs: continue
+                    if not all(n in xy for n in refs): raise ValueError('Missing diagnostic way coordinates')
+                    length=math.fsum(geod.inv(*xy[a],*xy[b])[2] for a,b in zip(refs,refs[1:]))/1000
+                    ways.append({'osm_way_id':way['osm_id'],'tags':way['data']['tags'],
+                                 'full_polyline_length_recomputed_km':length})
+                incident[city]=ways
+        result.update({'selected_station_or_track_explicit_excluded_modes':bad_modes,
+                       'independently_recomputed_station_offsets_m':offsets,
+                       'selected_anchor_incident_way_checks':incident,
+                       'diagnostic_polylines_recomputed_here':bool(diagnostic),
+                       'raw_geodesic_recomputation_performed_here':bool(diagnostic),
+                       'full_route_or_national_track_geodesic_recomputation_performed_here':False,
+                       'scope':'City/segment tables, 30 station offsets, selected raw mode tags and local diagnostic way geometry. No national PBF or full city/route track geometry reread.'})
     if wrong:
         f=matches[0]
         result['confirmed_mapping_error']={'city':'福州','actual_matched_name':f['station_name'],'osm_id':f['osm_id'],

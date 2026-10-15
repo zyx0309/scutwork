@@ -1,0 +1,129 @@
+{
+  "generated_at_utc": "2026-10-15T03:50:25.915016+00:00",
+  "generated_at_beijing": "2026-10-15T11:50:25.915016+08:00",
+  "result_graph_version": 6,
+  "result_station_identity_version": 3,
+  "bundled_mode_fix_requires_national_rerun": false,
+  "repository": "https://github.com/zyx0309/scutwork",
+  "uploaded_result_files_independently_hashed_here": {
+    "RESULTS.md": {
+      "bytes": 941,
+      "sha256": "dc92fa57d746b13e64cef49c9ceac97154d1f9fd22a16071a7de7e14fb0bcf80"
+    },
+    "SCOPE.txt": {
+      "bytes": 145,
+      "sha256": "832aa6ec2eb1515da9f00c6db2009a98976aa741c5b8ce9af3afbdadb0ba9a7e"
+    },
+    "cities.csv": {
+      "bytes": 3789,
+      "sha256": "f012cf43644fc211b90071bbfcfde8ed3605a91cb3593e29228d6f0140f4395a"
+    },
+    "city_edges.csv": {
+      "bytes": 6303914,
+      "sha256": "efc79849951f0b173f8953dea352db33e61d711ba7fb51334bfe1214d2ef55e8"
+    },
+    "city_stations.csv": {
+      "bytes": 39640,
+      "sha256": "f03975d7155b115167a34ab4343aed7561df57b272daae6e4f9767533d614f52"
+    },
+    "data_quality.json": {
+      "bytes": 221813,
+      "sha256": "80689e8bf1d3b38d1a7ce6905873f9959ff19dd2b75d015712a14c9b7bfdf89f"
+    },
+    "figures/guangzhou_lanzhou_route.png": {
+      "bytes": 780252,
+      "sha256": "78296506dce2d734ace38296db30688238eb976391cd1852b58e4fff05d346df"
+    },
+    "figures/station_checks_detail.png": {
+      "bytes": 1642903,
+      "sha256": "c27b84a59782c7c3e816c0212755c5085089674c7ecedf9b0d54143bd80bd382"
+    },
+    "guangzhou_lanzhou_segments.csv": {
+      "bytes": 61025,
+      "sha256": "973a8583b427a28dd1dc5617cbfb288e21102196d6d3f21a366d5f1a99411d41"
+    },
+    "guangzhou_lanzhou_status.json": {
+      "bytes": 5637,
+      "sha256": "2760195e8cf326daf154a1c896cb0f6a4a8929da58066137ebf6391046b23646"
+    },
+    "run_status.json": {
+      "bytes": 257,
+      "sha256": "ff0601a06c066848d75c1474d8fb4ce41970523892f5ec58bf2298a2520620d8"
+    },
+    "station_candidate_rejections.csv": {
+      "bytes": 54877,
+      "sha256": "bc334f6ab82eda38959608a838975f05653e97a0a23eb29d4c0db220dfe678dc"
+    },
+    "station_diagnostics.json": {
+      "bytes": 352860,
+      "sha256": "90c6e38b7d88fcb8d191ac6f6cc14dbb5a28a5cdb4ccb66cb639621a1b16fae0"
+    }
+  },
+  "original_pbf_provenance_copied_from_user_run_not_rehashed_here": {
+    "china": {
+      "source_url": "https://download.geofabrik.de/asia/china-latest.osm.pbf",
+      "origin": "user_supplied_local",
+      "registered_at": "2026-10-14T13:25:39.468786+00:00",
+      "size": 1608188315,
+      "sha256": "f1c602a55455819262b8183f0c0cb64cd95b7f78cabc3ac98f4e8762d8e80fa6",
+      "verified_header": true,
+      "upstream_checksum_status": "not_checked_offline",
+      "generator": "osmium/1.16.0",
+      "replication_timestamp": "2026-10-13T20:21:31Z",
+      "header_bounds": [
+        [
+          73.41788,
+          14.27437,
+          134.803619,
+          53.65559
+        ]
+      ]
+    },
+    "taiwan": {
+      "source_url": "https://download.geofabrik.de/asia/taiwan-latest.osm.pbf",
+      "origin": "user_supplied_local",
+      "registered_at": "2026-10-14T13:25:40.699811+00:00",
+      "size": 327561702,
+      "sha256": "f0854a692a189189fe54fb5e6fb222ad32db7f29bfe0fc26b05343a9d8f2a328",
+      "verified_header": true,
+      "upstream_checksum_status": "not_checked_offline",
+      "generator": "osmium/1.16.0",
+      "replication_timestamp": "2026-10-13T20:21:31Z",
+      "header_bounds": [
+        [
+          118.1036,
+          20.72799,
+          122.9312,
+          26.60305
+        ]
+      ]
+    }
+  },
+  "independent_verification_scope": "City graph, 55 segment records, 30 station offsets, raw selected mode tags and focal diagnostic way polylines. No full PBF or full city/route geometry reread.",
+  "national_run_repeated_after_fix": true,
+  "national_run_after_initial_name_fix": true,
+  "national_run_after_latest_mode_fix": true,
+  "full_track_geometry_received_here": false,
+  "actual_route_png_received": true,
+  "map_attribution": "© OpenStreetMap contributors / ODbL 1.0",
+  "font": {
+    "name": "Noto Sans SC",
+    "license": "SIL Open Font License 1.1",
+    "source_url": "https://raw.githubusercontent.com/notofonts/noto-cjk/main/Sans/Variable/TTF/Subset/NotoSansSC-VF.ttf",
+    "download_sha256": "d68bafcb48a2707749396aa12bbbd833cb70401f3a9a689fd2902c7e0d295964",
+    "full_font_files_bundled": false,
+    "subset_embedded_in_pdf": true
+  },
+  "analysis_code_release_commit": "8c97b8f3dc5490baadd86613dd3e17152b868abc",
+  "exact_runtime_commit_recorded": false,
+  "runtime_version_evidence": "User run_status.json records graph_version=6 and station_identity_version=3; no exact source commit is recorded by the runtime.",
+  "national_execution_location": "User Windows computer; not rerun in cloud",
+  "confirmed_previous_fuzhou_errors_absent_from_current_selected_mapping": true,
+  "remaining_limitations": [
+    "25 spatial matches pending review",
+    "6 isolated cities under current model",
+    "Unknown or anomalous usage tags",
+    "Single-node city barrier definition yields K28",
+    "Full track GeoJSON remains on user Windows computer"
+  ]
+}

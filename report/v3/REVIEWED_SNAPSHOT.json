@@ -1,0 +1,21 @@
+{
+  "profile": "reviewed_real_osm_graph6_identity3_20261015_033558UTC",
+  "input_sha256": {
+    "RESULTS.md": "dc92fa57d746b13e64cef49c9ceac97154d1f9fd22a16071a7de7e14fb0bcf80",
+    "SCOPE.txt": "832aa6ec2eb1515da9f00c6db2009a98976aa741c5b8ce9af3afbdadb0ba9a7e",
+    "cities.csv": "f012cf43644fc211b90071bbfcfde8ed3605a91cb3593e29228d6f0140f4395a",
+    "city_edges.csv": "efc79849951f0b173f8953dea352db33e61d711ba7fb51334bfe1214d2ef55e8",
+    "city_stations.csv": "f03975d7155b115167a34ab4343aed7561df57b272daae6e4f9767533d614f52",
+    "data_quality.json": "80689e8bf1d3b38d1a7ce6905873f9959ff19dd2b75d015712a14c9b7bfdf89f",
+    "figures/guangzhou_lanzhou_route.png": "78296506dce2d734ace38296db30688238eb976391cd1852b58e4fff05d346df",
+    "figures/station_checks_detail.png": "c27b84a59782c7c3e816c0212755c5085089674c7ecedf9b0d54143bd80bd382",
+    "guangzhou_lanzhou_segments.csv": "973a8583b427a28dd1dc5617cbfb288e21102196d6d3f21a366d5f1a99411d41",
+    "guangzhou_lanzhou_status.json": "2760195e8cf326daf154a1c896cb0f6a4a8929da58066137ebf6391046b23646",
+    "run_status.json": "ff0601a06c066848d75c1474d8fb4ce41970523892f5ec58bf2298a2520620d8",
+    "station_candidate_rejections.csv": "bc334f6ab82eda38959608a838975f05653e97a0a23eb29d4c0db220dfe678dc",
+    "station_diagnostics.json": "90c6e38b7d88fcb8d191ac6f6cc14dbb5a28a5cdb4ccb66cb639621a1b16fae0"
+  },
+  "analysis_code_release_commit": "8c97b8f3dc5490baadd86613dd3e17152b868abc",
+  "exact_runtime_commit_recorded": false,
+  "scope": "Same-upload third national run: graph6/identity3. Reviewed city/segment tables, raw local tags, station offsets and focal incident geometry. No full PBF or full route GeoJSON reread."
+}

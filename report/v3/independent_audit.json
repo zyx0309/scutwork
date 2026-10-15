@@ -1,0 +1,324 @@
+{
+  "input_sha256": {
+    "cities.csv": "f012cf43644fc211b90071bbfcfde8ed3605a91cb3593e29228d6f0140f4395a",
+    "city_edges.csv": "efc79849951f0b173f8953dea352db33e61d711ba7fb51334bfe1214d2ef55e8",
+    "RESULTS.md": "dc92fa57d746b13e64cef49c9ceac97154d1f9fd22a16071a7de7e14fb0bcf80",
+    "run_status.json": "ff0601a06c066848d75c1474d8fb4ce41970523892f5ec58bf2298a2520620d8",
+    "guangzhou_lanzhou_segments.csv": "973a8583b427a28dd1dc5617cbfb288e21102196d6d3f21a366d5f1a99411d41",
+    "guangzhou_lanzhou_status.json": "2760195e8cf326daf154a1c896cb0f6a4a8929da58066137ebf6391046b23646",
+    "station_diagnostics.json": "90c6e38b7d88fcb8d191ac6f6cc14dbb5a28a5cdb4ccb66cb639621a1b16fae0",
+    "SCOPE.txt": "832aa6ec2eb1515da9f00c6db2009a98976aa741c5b8ce9af3afbdadb0ba9a7e",
+    "station_candidate_rejections.csv": "bc334f6ab82eda38959608a838975f05653e97a0a23eb29d4c0db220dfe678dc",
+    "city_stations.csv": "f03975d7155b115167a34ab4343aed7561df57b272daae6e4f9767533d614f52",
+    "data_quality.json": "80689e8bf1d3b38d1a7ce6905873f9959ff19dd2b75d015712a14c9b7bfdf89f"
+  },
+  "city_count": 34,
+  "city_order_matches": true,
+  "edge_count": 378,
+  "invalid_edges": [],
+  "duplicate_city_edges": [],
+  "independently_recomputed_components": [
+    [
+      "北京",
+      "天津",
+      "上海",
+      "重庆",
+      "石家庄",
+      "太原",
+      "呼和浩特",
+      "沈阳",
+      "长春",
+      "哈尔滨",
+      "杭州",
+      "合肥",
+      "福州",
+      "南昌",
+      "济南",
+      "郑州",
+      "武汉",
+      "长沙",
+      "广州",
+      "南宁",
+      "成都",
+      "贵阳",
+      "昆明",
+      "拉萨",
+      "兰州",
+      "西宁",
+      "银川",
+      "香港"
+    ],
+    [
+      "南京"
+    ],
+    [
+      "海口"
+    ],
+    [
+      "西安"
+    ],
+    [
+      "乌鲁木齐"
+    ],
+    [
+      "台北"
+    ],
+    [
+      "澳门"
+    ]
+  ],
+  "component_count": 7,
+  "degree": {
+    "北京": 27,
+    "天津": 27,
+    "上海": 27,
+    "重庆": 27,
+    "石家庄": 27,
+    "太原": 27,
+    "呼和浩特": 27,
+    "沈阳": 27,
+    "长春": 27,
+    "哈尔滨": 27,
+    "南京": 0,
+    "杭州": 27,
+    "合肥": 27,
+    "福州": 27,
+    "南昌": 27,
+    "济南": 27,
+    "郑州": 27,
+    "武汉": 27,
+    "长沙": 27,
+    "广州": 27,
+    "南宁": 27,
+    "海口": 0,
+    "成都": 27,
+    "贵阳": 27,
+    "昆明": 27,
+    "拉萨": 27,
+    "西安": 0,
+    "兰州": 27,
+    "西宁": 27,
+    "银川": 27,
+    "乌鲁木齐": 0,
+    "台北": 0,
+    "香港": 27,
+    "澳门": 0
+  },
+  "largest_city_component_size": 28,
+  "largest_city_component_is_complete": true,
+  "mainland_component_is_complete_K27": false,
+  "independent_city_graph_dijkstra_km": 2383.541507726979,
+  "city_graph_dijkstra_city_sequence": [
+    "广州",
+    "兰州"
+  ],
+  "reported_base_graph_km": 2383.541507726979,
+  "difference_from_reported_base_km": 0.0,
+  "algorithmically_mapped_stations": 30,
+  "station_status_counts": {
+    "spatial_match_needs_review": 25,
+    "topology_matched": 5,
+    "station_found_no_reliable_track_match": 3,
+    "no_heavy_rail_representative_selected": 1
+  },
+  "route_segment_count": 55,
+  "segments_sum_km": 2383.541507726978,
+  "segment_sum_difference_km": -9.094947017729282e-13,
+  "adjacent_segment_track_nodes_continuous": true,
+  "segment_endpoint_matches_route_anchors": true,
+  "cumulative_distance_consistent": true,
+  "confirmed_fuzhou_fuzhou_name_collision": false,
+  "confirmed_fuzhou_wrong_transport_mode": false,
+  "source_completed_at": "2026-10-15T03:35:58.722313+00:00",
+  "source_graph_version": 6,
+  "source_station_identity_version": 3,
+  "candidate_mappings_after_rejecting_known_error": 30,
+  "raw_geodesic_recomputation_performed_here": true,
+  "scope": "City/segment tables, 30 station offsets, selected raw mode tags and local diagnostic way geometry. No national PBF or full city/route track geometry reread.",
+  "selected_station_or_track_explicit_excluded_modes": [],
+  "independently_recomputed_station_offsets_m": {
+    "北京": 8.509696908154622,
+    "天津": 103.22654559831165,
+    "上海": 59.04042702670723,
+    "重庆": 15.698119184713834,
+    "石家庄": 11.964150593909533,
+    "太原": 2.2644293780518243,
+    "呼和浩特": 50.71907327383903,
+    "沈阳": 28.30838357230095,
+    "长春": 53.31804354938332,
+    "哈尔滨": 16.592373386765075,
+    "南京": 0.0,
+    "杭州": 3.011900651109205,
+    "合肥": 33.02202590858703,
+    "福州": 34.33336435659987,
+    "南昌": 95.31944259907851,
+    "济南": 13.174690848587218,
+    "郑州": 16.79585952358571,
+    "武汉": 51.85416141236083,
+    "长沙": 25.35998899597354,
+    "广州": 0.0,
+    "南宁": 0.0,
+    "成都": 0.0,
+    "贵阳": 123.74470318845069,
+    "昆明": 34.13396968942012,
+    "拉萨": 79.67852275681814,
+    "兰州": 38.41225085056314,
+    "西宁": 146.22295025570227,
+    "银川": 26.833973195225756,
+    "台北": 10.956566491483724,
+    "香港": 11.335492227166384
+  },
+  "selected_anchor_incident_way_checks": {
+    "天津": [
+      {
+        "osm_way_id": 1086113174,
+        "tags": {
+          "electrified": "contact_line",
+          "frequency": "50",
+          "gauge": "1435",
+          "railway": "rail",
+          "railway:track_ref": "III-14",
+          "service": "siding",
+          "voltage": "25000"
+        },
+        "full_polyline_length_recomputed_km": 0.8390652271431223
+      }
+    ],
+    "南京": [
+      {
+        "osm_way_id": 384136513,
+        "tags": {
+          "electrified": "contact_line",
+          "frequency": "50",
+          "gauge": "1435",
+          "name": "1道",
+          "railway": "rail",
+          "service": "siding",
+          "voltage": "25000"
+        },
+        "full_polyline_length_recomputed_km": 0.9843044627137177
+      }
+    ],
+    "福州": [
+      {
+        "osm_way_id": 699510241,
+        "tags": {
+          "alt_name": "福平铁路",
+          "electrified": "contact_line",
+          "frequency": "50",
+          "gauge": "1435",
+          "highspeed": "yes",
+          "maxspeed": "200",
+          "name": "福平线",
+          "name:en": "Fuping Line",
+          "name:zh": "福平线",
+          "railway": "rail",
+          "railway:ctcs": "3",
+          "ref": "3088",
+          "start_date": "2020-12-26",
+          "usage": "main",
+          "voltage": "25000"
+        },
+        "full_polyline_length_recomputed_km": 0.8066792480124896
+      },
+      {
+        "osm_way_id": 775888938,
+        "tags": {
+          "electrified": "contact_line",
+          "frequency": "50",
+          "gauge": "1435",
+          "highspeed": "yes",
+          "loc_name": "合福客运专线",
+          "maxspeed": "300",
+          "name": "合福高速线",
+          "name:en": "Hefei-Fuzhou HSR",
+          "name:fr": "LGV Hefei - Fuzhou",
+          "name:ja": "合福旅客専用線",
+          "name:ko": "허푸 고속철도",
+          "name:nan": "Ha̍p-hok-kheh-ūn-tsuan-suànn",
+          "name:zh": "合福高速线",
+          "name:zh-Hans": "合福高速线",
+          "name:zh-Hant": "合福高速線",
+          "railway": "rail",
+          "railway:traffic_mode": "mixed",
+          "ref": "3047",
+          "start_date": "2015-06-28",
+          "usage": "main",
+          "voltage": "25000"
+        },
+        "full_polyline_length_recomputed_km": 1.357899056444293
+      }
+    ],
+    "海口": [],
+    "贵阳": [
+      {
+        "osm_way_id": 1106509608,
+        "tags": {
+          "electrified": "contact_line",
+          "gauge": "1435",
+          "railway": "rail",
+          "service": "yard"
+        },
+        "full_polyline_length_recomputed_km": 0.8770357598693258
+      }
+    ],
+    "西安": [],
+    "兰州": [
+      {
+        "osm_way_id": 405548636,
+        "tags": {
+          "alt_name": "陇海铁路",
+          "electrified": "contact_line",
+          "frequency": "50",
+          "gauge": "1435",
+          "maxspeed": "130",
+          "name": "陇海线",
+          "name:en": "Longhai Line",
+          "name:zh": "陇海线",
+          "railway": "rail",
+          "ref": "0003",
+          "usage": "main",
+          "voltage": "25000"
+        },
+        "full_polyline_length_recomputed_km": 0.7043999228871219
+      },
+      {
+        "osm_way_id": 1258365625,
+        "tags": {
+          "alt_name": "陇海铁路",
+          "electrified": "contact_line",
+          "frequency": "50",
+          "gauge": "1435",
+          "maxspeed": "130",
+          "name": "陇海线",
+          "name:en": "Longhai Line",
+          "name:zh": "陇海线",
+          "railway": "rail",
+          "ref": "0003",
+          "usage": "main",
+          "voltage": "25000"
+        },
+        "full_polyline_length_recomputed_km": 0.6567298970390837
+      }
+    ],
+    "西宁": [
+      {
+        "osm_way_id": 1102791955,
+        "tags": {
+          "electrified": "contact_line",
+          "frequency": "50",
+          "gauge": "1435",
+          "highspeed": "yes",
+          "maxspeed": "80",
+          "railway": "rail",
+          "service": "siding",
+          "voltage": "25000"
+        },
+        "full_polyline_length_recomputed_km": 1.6054924129424173
+      }
+    ],
+    "乌鲁木齐": []
+  },
+  "diagnostic_polylines_recomputed_here": true,
+  "full_route_or_national_track_geodesic_recomputation_performed_here": false
+}

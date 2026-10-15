@@ -27,6 +27,10 @@ def main():
     quality = json.loads((inputs / 'data_quality.json').read_text(encoding='utf-8-sig'))
     state=json.loads((inputs/'run_status.json').read_text(encoding='utf-8-sig'))
     diagnosed=(inputs/'station_diagnostics.json').is_file()
+    current=(state.get('graph_version'),state.get('station_identity_version'))==(6,3)
+    if current:
+        from reviewed_report import validate_snapshot
+        validate_snapshot(inputs,document_root/'REVIEWED_SNAPSHOT.json')
     input_files=sorted(p for p in inputs.rglob('*') if p.is_file())
     now = datetime.now(timezone.utc)
     manifest = {
@@ -56,6 +60,21 @@ def main():
             'full_font_files_bundled': False, 'subset_embedded_in_pdf': True,
         },
     }
+    if current:
+        manifest.pop('analysis_code_commit')
+        manifest.pop('known_confirmed_issue')
+        manifest.update({
+            'analysis_code_release_commit':'8c97b8f3dc5490baadd86613dd3e17152b868abc',
+            'exact_runtime_commit_recorded':False,
+            'runtime_version_evidence':'User run_status.json records graph_version=6 and station_identity_version=3; no exact source commit is recorded by the runtime.',
+            'bundled_mode_fix_requires_national_rerun':False,
+            'national_run_repeated_after_fix':True,
+            'national_run_after_latest_mode_fix':True,
+            'national_execution_location':'User Windows computer; not rerun in cloud',
+            'independent_verification_scope':'City graph, 55 segment records, 30 station offsets, raw selected mode tags and focal diagnostic way polylines. No full PBF or full city/route geometry reread.',
+            'confirmed_previous_fuzhou_errors_absent_from_current_selected_mapping':True,
+            'remaining_limitations':['25 spatial matches pending review','6 isolated cities under current model','Unknown or anomalous usage tags','Single-node city barrier definition yields K28','Full track GeoJSON remains on user Windows computer'],
+        })
     (document_root / 'SOURCE_MANIFEST.json').write_text(
         json.dumps(manifest, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
     files = []
@@ -83,9 +102,11 @@ def main():
     if diagnosed:
         files.extend(ROOT/name for name in ('README.md','.gitignore','requirements.txt','verify_results.py',
                      'build_report.py','package_submission.py','fonts/OFL.txt'))
+        files.append(ROOT/'reviewed_report.py')
         files.extend(document_root/name for name in ('README.md','SOURCE_MANIFEST.json','independent_audit.json',
                      'audited_city_stations.csv','mst_display_edges.csv','deliverables/AI_Railway_Report_Audited.docx',
                      'deliverables/AI_Railway_Report_Audited.pdf','deliverables/AI_Railway_Report_Audited.md'))
+        if current:files.append(document_root/'REVIEWED_SNAPSHOT.json')
     else:
         files.extend(ROOT / name for name in report_files)
     files.extend(input_files)
