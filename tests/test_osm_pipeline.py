@@ -156,6 +156,37 @@ class GeometryAndTopologyTests(unittest.TestCase):
         self.assertEqual(compress_cities(graph,{}),[])
 
 class EndToEndFixtureTests(unittest.TestCase):
+    def test_diagnostics_reads_cache_without_rerun_or_changing_results(self):
+        from unittest.mock import patch
+        import hashlib
+        import zipfile
+        sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
+        from tools.station_diagnostics import diagnose
+        with tempfile.TemporaryDirectory(prefix='诊断 测试 ') as directory:
+            root=Path(directory);fixture(root/'data/raw')
+            run(root/'data/raw',root/'data/cache',root/'outputs',make_plots=False,test_fixture=True)
+            paths=list((root/'outputs').glob('*.csv'))+list((root/'outputs').glob('*.json'))+[root/'data/cache/rail_subset.sqlite']
+            original={p:hashlib.sha256(p.read_bytes()).hexdigest() for p in paths}
+            with patch('osmium.SimpleHandler.apply_file',side_effect=AssertionError('Diagnostics rescanned PBF')), \
+                 patch('pickle.load',side_effect=AssertionError('Diagnostics loaded nationwide graph')):
+                bundle=diagnose(root)
+            self.assertTrue(all(hashlib.sha256(p.read_bytes()).hexdigest()==digest for p,digest in original.items()))
+            result=json.loads((root/'outputs/station_diagnostics.json').read_text())
+            lanzhou=result['evidence']['兰州']
+            self.assertEqual(lanzhou['selected_osm_object']['data']['tags']['railway'],'station')
+            self.assertTrue(lanzhou['incident_rail_ways'])
+            self.assertTrue(lanzhou['track_node_coordinates'])
+            with zipfile.ZipFile(bundle) as archive:
+                self.assertIsNone(archive.testzip())
+                self.assertFalse(any(n.endswith(('.pbf','.pkl','.sqlite')) for n in archive.namelist()))
+
+    def test_diagnostics_missing_cache_does_not_create_or_download_data(self):
+        sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
+        from tools.station_diagnostics import diagnose
+        with tempfile.TemporaryDirectory() as directory:
+            with self.assertRaises(FileNotFoundError): diagnose(Path(directory))
+            self.assertFalse((Path(directory)/'data').exists())
+
     def test_old_station_graph_cache_rebuilt_but_extraction_reused(self):
         from unittest.mock import patch
         with tempfile.TemporaryDirectory() as d:

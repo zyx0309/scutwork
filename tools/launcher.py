@@ -34,12 +34,15 @@ def main():
     parser=argparse.ArgumentParser()
     parser.add_argument('--install',action='store_true')
     parser.add_argument('--test',action='store_true')
+    parser.add_argument('--diagnose-stations',action='store_true')
     parser.add_argument('--backup-outputs',action='store_true',help='Move previous outputs to backups before the default local rerun')
     args,remaining=parser.parse_known_args()
+    if args.diagnose_stations and (args.install or args.test or args.backup_outputs or remaining):
+        parser.error('--diagnose-stations cannot be combined with processing or installation options')
     if args.backup_outputs and (args.install or args.test or any(a.split('=',1)[0]=='--output-dir' for a in remaining)):
         parser.error('--backup-outputs is for the default processing output directory only')
     logs=ROOT/'logs'; logs.mkdir(exist_ok=True)
-    log_path=logs/f"{'install' if args.install else 'tests' if args.test else 'run'}_{datetime.now():%Y%m%d_%H%M%S}.log"
+    log_path=logs/f"{'install' if args.install else 'tests' if args.test else 'diagnostics' if args.diagnose_stations else 'run'}_{datetime.now():%Y%m%d_%H%M%S}.log"
     environment=os.environ.copy()
     environment.update(PYTHONUTF8='1',PYTHONIOENCODING='utf-8',PYTHONUNBUFFERED='1')
     try:
@@ -56,6 +59,8 @@ def main():
                           [sys.executable,'-m','pip','check']]
             elif args.test:
                 commands=[[sys.executable,'-m','unittest','discover','-s',str(ROOT/'tests'),'-v']]
+            elif args.diagnose_stations:
+                commands=[[sys.executable,'-u',str(ROOT/'tools/station_diagnostics.py')]]
             else:
                 commands=[[sys.executable,'-u',str(ROOT/'src/run.py'),*remaining]]
             for command in commands:

@@ -1,0 +1,14 @@
+{
+  "fuzhou_relation": {
+    "url": "https://api.openstreetmap.org/api/0.6/relation/19659201",
+    "error": "HTTPSConnectionPool(host='api.openstreetmap.org', port=443): Max retries exceeded with url: /api/0.6/relation/19659201 (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))"
+  },
+  "fuzhou_anchor_ways": {
+    "url": "https://api.openstreetmap.org/api/0.6/node/9521844144/ways",
+    "error": "HTTPSConnectionPool(host='api.openstreetmap.org', port=443): Max retries exceeded with url: /api/0.6/node/9521844144/ways (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))"
+  },
+  "nanjing_anchor_ways": {
+    "url": "https://api.openstreetmap.org/api/0.6/node/267225237/ways",
+    "error": "HTTPSConnectionPool(host='api.openstreetmap.org', port=443): Max retries exceeded with url: /api/0.6/node/267225237/ways (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))"
+  }
+}

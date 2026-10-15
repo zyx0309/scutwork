@@ -1,0 +1,284 @@
+{
+  "scope": "Independent checks of three post-fix uploads; new city-edge CSV, segment CSV, full track geometry and raw PBF not received.",
+  "input_sha256": {
+    "station_candidate_rejections.csv": "aa03a903de924e1b37bfea264ce2cd58e3a2fc1cc385653f324fd3745bce86da",
+    "city_stations.csv": "e239ffee385083d19ffcd1a971dcc0d704d1150ffc1cf255383d74702652e976",
+    "data_quality.json": "1f9cdcdd2e7277c45bc01ca62124e67a787c4346ff24cc7f2446acc9c3d87811"
+  },
+  "quality_generated_at_utc": "2026-10-15T02:46:30.406917+00:00",
+  "city_order_matches": true,
+  "table_anchor_count": 30,
+  "status_counts": {
+    "spatial_match_needs_review": 24,
+    "topology_matched": 6,
+    "station_found_no_reliable_track_match": 3,
+    "no_heavy_rail_representative_selected": 1
+  },
+  "rejection_count_independently_matched_to_quality": 7,
+  "rejection_reasons": {
+    "station_outside_city_distance_limit": 1,
+    "english_alias_conflicts_with_chinese_name": 6
+  },
+  "station_track_geodesic_gap_max_rounding_error_m": 0.0004922271663829747,
+  "all_selected_station_city_distance_values_under_80km": true,
+  "city_distance_recomputed_here": false,
+  "changed_selected_identities_and_anchors": [
+    {
+      "city": "福州",
+      "changes": {
+        "station_name": {
+          "before": "浮洲",
+          "after": "福州火车站"
+        },
+        "osm_id": {
+          "before": "10658521",
+          "after": "19659201"
+        },
+        "track_node_id": {
+          "before": "8892809400",
+          "after": "9521844144"
+        },
+        "component_id": {
+          "before": "5",
+          "after": "1109"
+        }
+      }
+    }
+  ],
+  "fuzhou_current_candidate": {
+    "order": "14",
+    "city": "福州",
+    "requested_station": "福州站",
+    "station_name": "福州火车站",
+    "osm_type": "relation",
+    "osm_id": "19659201",
+    "station_longitude": "119.3127251",
+    "station_latitude": "26.1123299",
+    "track_node_id": "9521844144",
+    "track_longitude": "119.3127251",
+    "track_latitude": "26.1123299",
+    "match_distance_m": "0.0",
+    "match_method": "OSM_stop_area_membership",
+    "match_status": "topology_matched",
+    "component_id": "1109",
+    "selection_basis": "明确选定主要重铁站；精确站名匹配，不合并同城其他车站",
+    "source": "china-latest.osm.pbf",
+    "note": "Station location: stop_area_rail_stop; identity/track need review; passenger operation not confirmed",
+    "identity_name_match": "chinese_alias",
+    "identity_matched_aliases": "fuzhou;fuzhourailway;fuzhourailwaystation;福州",
+    "identity_source_tags": "{\"name\": \"福州火车站\", \"name:en\": \"Fuzhou Railway Station\"}",
+    "city_station_distance_m": "4389.42",
+    "identity_status": "name_and_city_proximity_checked_not_manual_verification"
+  },
+  "previous_fuzhou_fuzhou_misidentification_removed": true,
+  "fuzhou_heavy_rail_station_identity_fully_verified": false,
+  "fuzhou_incident_component_gap_diagnostics": [
+    {
+      "node_a": 9521852559,
+      "node_b": 12568289036,
+      "distance_m": 15.241976117087487,
+      "component_a": 1109,
+      "component_b": 1110,
+      "action": "diagnostic_only_not_joined"
+    }
+  ],
+  "reported_city_graph": {
+    "node_count": 34,
+    "edge_count": 351,
+    "component_count": 8,
+    "components": [
+      {
+        "id": 0,
+        "cities": [
+          "北京",
+          "天津",
+          "上海",
+          "重庆",
+          "石家庄",
+          "太原",
+          "呼和浩特",
+          "沈阳",
+          "长春",
+          "哈尔滨",
+          "杭州",
+          "合肥",
+          "南昌",
+          "济南",
+          "郑州",
+          "武汉",
+          "长沙",
+          "广州",
+          "南宁",
+          "成都",
+          "贵阳",
+          "昆明",
+          "拉萨",
+          "兰州",
+          "西宁",
+          "银川",
+          "香港"
+        ]
+      },
+      {
+        "id": 1,
+        "cities": [
+          "南京"
+        ]
+      },
+      {
+        "id": 2,
+        "cities": [
+          "福州"
+        ]
+      },
+      {
+        "id": 3,
+        "cities": [
+          "海口"
+        ]
+      },
+      {
+        "id": 4,
+        "cities": [
+          "西安"
+        ]
+      },
+      {
+        "id": 5,
+        "cities": [
+          "乌鲁木齐"
+        ]
+      },
+      {
+        "id": 6,
+        "cities": [
+          "台北"
+        ]
+      },
+      {
+        "id": 7,
+        "cities": [
+          "澳门"
+        ]
+      }
+    ],
+    "isolated_cities": [
+      "南京",
+      "福州",
+      "海口",
+      "西安",
+      "乌鲁木齐",
+      "台北",
+      "澳门"
+    ],
+    "guangzhou_lanzhou_compressed_km": 2383.541507726979
+  },
+  "reported_rail_graph": {
+    "junction_node_count": 294713,
+    "edge_count": 296408,
+    "component_count": 1671,
+    "largest_components": [
+      [
+        0,
+        262720
+      ],
+      [
+        5,
+        4022
+      ],
+      [
+        13,
+        1837
+      ],
+      [
+        4,
+        665
+      ],
+      [
+        43,
+        590
+      ],
+      [
+        36,
+        556
+      ],
+      [
+        112,
+        524
+      ],
+      [
+        247,
+        428
+      ],
+      [
+        137,
+        384
+      ],
+      [
+        169,
+        318
+      ],
+      [
+        569,
+        311
+      ],
+      [
+        567,
+        307
+      ],
+      [
+        6,
+        286
+      ],
+      [
+        635,
+        270
+      ],
+      [
+        596,
+        264
+      ],
+      [
+        338,
+        260
+      ],
+      [
+        144,
+        238
+      ],
+      [
+        170,
+        232
+      ],
+      [
+        284,
+        211
+      ],
+      [
+        354,
+        208
+      ]
+    ]
+  },
+  "new_edge_table_received_and_recomputed": false,
+  "new_segment_table_received_and_recomputed": false,
+  "reported_route_status": "reachable",
+  "reported_route_total_km": 2383.541507726979,
+  "reported_route_total_unchanged": true,
+  "source_extraction_fingerprint_unchanged": true,
+  "priority_spatial_reviews_over_100m": [
+    {
+      "city": "天津",
+      "distance_m": 103.227
+    },
+    {
+      "city": "贵阳",
+      "distance_m": 123.745
+    },
+    {
+      "city": "西宁",
+      "distance_m": 146.223
+    }
+  ],
+  "raw_geometry_recomputed_here": false
+}
