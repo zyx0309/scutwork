@@ -6,12 +6,12 @@ pushd "%~dp0"
 if not exist ".venv\Scripts\python.exe" goto failed
 ".venv\Scripts\python.exe" -u "tools\launcher.py" --test
 if errorlevel 1 goto failed
-echo 测试通过。这仅验证小型人工测试数据，不表示全国真实数据已验证。
+echo Tests passed on small synthetic fixtures. National real data is not validated by these tests.
 pause
 popd
 exit /b 0
 :failed
-echo 测试未完成。请先安装环境，并查看 logs 日志。
+echo Tests failed. Check the installed environment and logs.
 pause
 popd
 exit /b 1

@@ -1,9 +1,10 @@
 import json
 import os
 import pickle
+import re
 import sqlite3
 from pathlib import Path
-from .config import ROOT,RAW,CACHE,OUT,CITY_SPECS,CITY_ORDER,SOURCES
+from .config import ROOT,RAW,CACHE,OUT,CITY_SPECS,CITY_ORDER,SOURCES,SNAP_METERS,CITY_STATION_MAX_METERS,STATION_IDENTITY_VERSION
 from .common import now,save_json,save_csv,sha256
 from .download import validate_header,download
 from .extract import extract,load_objects
@@ -12,11 +13,22 @@ from .graph import build_edges,select_station_access,compress_cities
 from .export import write_outputs
 from .plotting import plots
 
-GRAPH_VERSION=4
+GRAPH_VERSION=5
+
+def local_pbf_path(raw_dir,region):
+    canonical=Path(raw_dir)/f'{region}-latest.osm.pbf'
+    if canonical.is_file(): return canonical
+    candidates=sorted(p for p in Path(raw_dir).glob(f'{region}-*.osm.pbf')
+                      if p.is_file() and re.fullmatch(rf'{re.escape(region)}-(?:\d{{6}}|\d{{8}})\.osm\.pbf',p.name))
+    if len(candidates)==1: return candidates[0]
+    if len(candidates)>1:
+        raise ValueError(f'{region} 存在多个日期版 PBF，不能猜测使用哪个：'+', '.join(p.name for p in candidates)+
+                         f'；请将选定文件命名为 {canonical.name}')
+    raise FileNotFoundError(f'请将已下载的 {canonical.name}（或唯一一份 {region}-日期.osm.pbf）放到 {raw_dir}；本地模式不会联网下载')
 
 def local_inputs(raw_dir,regions):
     """Local files never cause network requests, even when no manifest exists."""
-    raw_dir=Path(raw_dir); paths=[raw_dir/f'{r}-latest.osm.pbf' for r in regions]
+    raw_dir=Path(raw_dir); paths=[local_pbf_path(raw_dir,r) for r in regions]
     manifest_file=raw_dir/'sources.json'
     manifest=json.loads(manifest_file.read_text(encoding='utf-8')) if manifest_file.exists() else {}
     for region,path in zip(regions,paths):
@@ -28,6 +40,7 @@ def local_inputs(raw_dir,regions):
             raise ValueError(f'{path.name} 与原有来源清单的 SHA-256 不一致；若明确更换数据版本，请先备份并删除 sources.json 后重新运行')
         manifest[region]={**previous,'source_url':SOURCES[region],'origin':previous.get('origin','user_supplied_local'),
                           'registered_at':now(),'size':path.stat().st_size,'sha256':checksum,
+                          'local_filename':path.name,
                           'verified_header':True,'upstream_checksum_status':previous.get('upstream_checksum_status','not_checked_offline'),
                           **header}
     save_json(manifest_file,manifest)
@@ -50,7 +63,9 @@ def run(raw_dir=RAW,cache_dir=CACHE,out=OUT,with_guangdong=False,make_plots=True
     subset,metadata=extract(paths,cache_dir,manifest)
     for region in regions: manifest[region]['full_pbf_parse_completed']=True
     save_json(Path(raw_dir)/'sources.json',manifest)
-    fingerprint={'graph_version':GRAPH_VERSION,'extraction':metadata['fingerprint'],'representatives':CITY_SPECS}
+    fingerprint={'graph_version':GRAPH_VERSION,'extraction':metadata['fingerprint'],'representatives':CITY_SPECS,
+                 'station_identity':{'version':STATION_IDENTITY_VERSION,'max_city_station_m':CITY_STATION_MAX_METERS,
+                                     'max_spatial_snap_m':SNAP_METERS}}
     graph_cache=cache_dir/'graph.pkl'; cache_meta=cache_dir/'graph.json'
     can_reuse=False
     if graph_cache.exists() and cache_meta.exists():
@@ -102,6 +117,7 @@ def run(raw_dir=RAW,cache_dir=CACHE,out=OUT,with_guangdong=False,make_plots=True
     (out/'RESULTS.md').write_text(text,encoding='utf-8')
     save_json(out/'run_status.json',{'status':'completed_test_fixture' if test_fixture else 'completed_real_osm',
                                    'completed_at':now(),'data_quality_file':'data_quality.json',
+                                   'graph_version':GRAPH_VERSION,'station_identity_version':STATION_IDENTITY_VERSION,
                                    'route_status':route['status'],'plotting_executed':make_plots})
     print('[7/7] 文件与质量检查完成',flush=True); print(text,flush=True)
     return quality
@@ -117,6 +133,8 @@ def summary_text(q):
     else:
         text+='广州至兰州：不可达。原因：'+route['reason']+'。\n\n'
     text+='待人工检查的空间匹配：'+('、'.join(q['spatial_matches_pending_review']) or '无')+'。\n\n'
+    rejected=[r for r in q['station_issues'] if r['issue']=='station_identity_candidate_rejected']
+    text+=f'被身份规则拒绝的候选对象：{len(rejected)}；详情见 `station_candidate_rejections.csv`。被拒绝的对象不进入代表站锚点。\n\n'
     text+='轨道筛选、覆盖、去重、缺失形状点与可疑断点见 `data_quality.json`。线路和用途未知不表示已确认可用于客运。\n'
     if q.get('data_quality_note'): text+='\n'+q['data_quality_note']+'\n'
     return text

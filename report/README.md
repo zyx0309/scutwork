@@ -1,5 +1,7 @@
 # 真实运行结果报告与审计附件
 
+**版本说明：本目录报告与成果包基于修复前的真实运行结果。** 站点身份代码现已修正，见根目录 [STATION_FIX_GUIDE.md](../STATION_FIX_GUIDE.md)。尚未收到修正后全国重跑结果，因此本目录旧报告、原始输入和统计保持不变，不将代码修复等同于全国数据已重新验证。
+
 已根据用户 Windows 电脑的真实 OSM 运行结果生成：
 
 - [Word 报告](deliverables/AI_Railway_Report_Audited.docx)：可编辑，填写封面的姓名、学号等空白项。

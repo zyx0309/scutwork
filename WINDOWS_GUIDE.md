@@ -1,5 +1,7 @@
 # Windows：从解压到查看结果
 
+已有本地运行结果、需要修复福州误匹配时，直接看 [修正与重跑步骤](STATION_FIX_GUIDE.md)，无需重装环境。`run_fixed.bat` 会备份旧结果并复用有效提取缓存。
+
 本项目的全国真实数据尚未在云端处理。云端验证包括源码编译、依赖检查、小型人工 PBF 测试和文件/绘图导出；这些不证明全国轨道连通、34 站已成功映射，也不提供真实广州至兰州总长度。下面的本地运行才处理你的真实文件。
 
 ## 1. 安装 Python
@@ -65,7 +67,7 @@ OSM_Railway_Project\data\raw\china-latest.osm.pbf
 OSM_Railway_Project\data\raw\taiwan-latest.osm.pbf
 ```
 
-文件名必须一致；注意资源管理器隐藏扩展名时不要造成 `.pbf.pbf`。不要将网页 HTML、ZIP 或未完成的 `.part` 文件改名为 PBF。
+优先使用上述名称；新版也接受每个区域唯一一份日期版，例如 `china-261013.osm.pbf` 或 `taiwan-20261013.osm.pbf`。若有多份日期版而没有 `latest`，需明确选定一份并命名为上述名称。注意隐藏扩展名时不要造成 `.pbf.pbf`；不要将 HTML、ZIP 或 `.part` 文件改名为 PBF。已有缓存时保持原文件名。
 
 来源：
 

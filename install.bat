@@ -3,7 +3,7 @@ chcp 65001 >nul
 set "PYTHONUTF8=1"
 set "PYTHONIOENCODING=utf-8"
 pushd "%~dp0"
-echo 正在准备 Python 3.12 64 位环境...
+echo Preparing Python 3.12 64-bit environment...
 py -3.12 -c "import struct; assert struct.calcsize('P') == 8" >nul 2>&1
 if errorlevel 1 goto use_python
 py -3.12 -m venv ".venv"
@@ -18,16 +18,16 @@ if errorlevel 1 goto failed
 ".venv\Scripts\python.exe" -u "tools\launcher.py" --install
 if errorlevel 1 goto failed
 echo.
-echo 安装完成。请将两个 PBF 放入 data\raw 后双击 run.bat。
+echo Installed. Put both PBF files in data\raw and run run.bat.
 pause
 popd
 exit /b 0
 :missing_python
-echo 未找到 Python 3.12 64 位。请从 https://www.python.org/downloads/ 安装，并勾选 Add python.exe to PATH。
+echo Python 3.12 64-bit not found. Install from https://www.python.org/downloads/ and enable Add python.exe to PATH.
 goto failed
 :failed
 echo.
-echo 安装未完成。请查看上方信息及 logs 文件夹中的日志。
+echo Installation failed. Read the messages above and the logs folder.
 pause
 popd
 exit /b 1

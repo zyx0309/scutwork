@@ -1,10 +1,11 @@
 """Representatives are explicit stations, not merged city-centre points."""
 import collections
+import json
 import math
 import numpy as np
 from pyproj import Transformer
 from scipy.spatial import cKDTree
-from .config import CITY_SPECS, CITY_ENGLISH, SNAP_METERS
+from .config import CITY_SPECS, CITY_ENGLISH, SNAP_METERS, CITY_STATION_MAX_METERS
 from .extract import normalized, tag_names, classify
 from .graph import GEOD
 
@@ -16,11 +17,21 @@ def distance_m(a,b):
 def station_aliases(tags):
     aliases=tag_names(tags)
     for s in list(aliases):
-        if s.endswith('车站'): aliases.add(s[:-2])
-        if s.endswith('站'): aliases.add(s[:-1])
-        for suffix in ['railwaystation','trainstation','station']:
+        for suffix in ['铁路车站','火车站','铁路站','车站','站','railwaystation','trainstation','station']:
             if s.endswith(suffix): aliases.add(s[:-len(suffix)])
     return aliases
+
+def has_han(text):
+    return any('\u3400' <= ch <= '\u9fff' or '\U00020000' <= ch <= '\U000323af' for ch in text)
+
+def name_evidence(tags,expected):
+    """Chinese name evidence precedes romanization; conflicting Chinese names veto it."""
+    names=station_aliases(tags); matched=names & expected
+    if any(has_han(name) for name in matched): return 2,sorted(matched),''
+    if not matched: return 0,[],''
+    if any(has_han(name) for name in names):
+        return 0,sorted(matched),'english_alias_conflicts_with_chinese_name'
+    return 1,sorted(matched),''
 
 def station_type(tags):
     return tags.get('station') not in {'subway','light_rail','monorail','tram'} and tags.get('railway')!='tram_stop'
@@ -81,14 +92,15 @@ def map_stations(nodes,ways,relations):
         city_names={normalized(city),normalized(city+'市'),normalized(CITY_ENGLISH[order-1])}
         for ident,_,source,data in place_nodes:
             tags=data['tags']
-            if tags.get('place') in {'city','town'} and tag_names(tags)&city_names:
+            evidence,_,_=name_evidence(tags,city_names)
+            if evidence:
                 population=tags.get('population','0').replace(',','')
                 pop=int(population) if population.isdigit() else 0
-                place_matches.append((int(tags.get('capital') in {'yes','2','4'}),pop,ident,source,data))
+                place_matches.append((evidence,int(tags.get('capital') in {'yes','2','4'}),pop,ident,source,data))
         city_row={'order':order,'city':city,'region':region,'longitude':'','latitude':'',
                   'layout_osm_type':'','layout_osm_id':'','layout_source':'','layout_status':'not_found'}
         if place_matches:
-            _,_,ident,source,data=max(place_matches,key=lambda r:(r[0],r[1],-r[2]))
+            _,_,_,ident,source,data=max(place_matches,key=lambda r:(r[0],r[1],r[2],-r[3]))
             city_row.update(longitude=data['lon'],latitude=data['lat'],layout_osm_type='node',
                             layout_osm_id=ident,layout_source=f'OSM place node; {source}',layout_status='OSM_place')
         row={'order':order,'city':city,'requested_station':aliases[0] if aliases else '',
@@ -96,12 +108,29 @@ def map_stations(nodes,ways,relations):
              'track_node_id':'','track_longitude':'','track_latitude':'','match_distance_m':'',
              'match_method':'','match_status':'no_matching_station','component_id':'',
              'selection_basis':'明确选定主要重铁站；精确站名匹配，不合并同城其他车站',
-             'source':'','note':''}
+             'source':'','note':'','identity_name_match':'','identity_matched_aliases':'',
+             'identity_source_tags':'','city_station_distance_m':'','identity_status':''}
         expected=station_aliases({'alt_name':';'.join(aliases)})
         matches=[]
-        found_station=False
+        found_station=False; rejected_station=False
         for key,candidate in candidates.items():
-            if not expected or not (station_aliases(candidate['tags'])&expected): continue
+            if not expected: continue
+            evidence,matched_aliases,rejection=name_evidence(candidate['tags'],expected)
+            if not evidence and not rejection: continue
+            offset=distance_m(candidate['coord'],(city_row['longitude'],city_row['latitude'])) if place_matches else None
+            if not rejection and offset is not None and offset>CITY_STATION_MAX_METERS:
+                rejection='station_outside_city_distance_limit'
+            if not rejection and evidence==1 and not place_matches:
+                rejection='english_only_station_without_OSM_city_context'
+            if rejection:
+                rejected_station=True
+                issues.append({'city':city,'issue':'station_identity_candidate_rejected','reason':rejection,
+                    'osm_type':candidate['osm_type'],'osm_id':candidate['osm_id'],'source':candidate['source'],
+                    'station_name':candidate['tags'].get('name:zh') or candidate['tags'].get('name',''),
+                    'longitude':candidate['coord'][0],'latitude':candidate['coord'][1],
+                    'city_station_distance_m':offset,'matched_aliases':matched_aliases,
+                    'name_tags':{k:v for k,v in candidate['tags'].items() if 'name' in k}})
+                continue
             found_station=True; anchor=None; method=''; confidence=0
             if key[0]=='n' and key[1] in all_refs:
                 anchor=key[1]; method='station_node_on_track'; confidence=3
@@ -121,30 +150,40 @@ def map_stations(nodes,ways,relations):
                 gap=distance_m(candidate['coord'],coords[anchor])
                 # Relation membership does not need a spatial threshold; it is explicit OSM evidence.
                 if method=='bounded_nearest_OSM_track_node' and gap>SNAP_METERS: continue
-                matches.append((confidence,anchor in main_refs,-gap,key,candidate,anchor,method))
+                matches.append((evidence,confidence,anchor in main_refs,-gap,key,candidate,anchor,method,matched_aliases,offset))
         if matches:
-            confidence,_,neg_gap,key,candidate,anchor,method=max(matches,key=lambda r:(r[0],r[1],r[2],-r[3][1]))
+            evidence,confidence,_,neg_gap,key,candidate,anchor,method,matched_aliases,offset=max(
+                matches,key=lambda r:(r[0],r[1],r[2],r[3],-r[4][1]))
             name=candidate['tags'].get('name:zh') or candidate['tags'].get('name') or aliases[0]
             row.update(station_name=name,osm_type=candidate['osm_type'],osm_id=candidate['osm_id'],
                        station_longitude=candidate['coord'][0],station_latitude=candidate['coord'][1],
                        track_node_id=anchor,track_longitude=coords[anchor][0],track_latitude=coords[anchor][1],
                        match_distance_m=round(-neg_gap,3),match_method=method,source=candidate['source'],
                        match_status='topology_matched' if confidence>1 else 'spatial_match_needs_review',
-                       note=f"Station location: {candidate['geometry_method']}; usage/passenger operation not confirmed")
+                       note=f"Station location: {candidate['geometry_method']}; identity/track need review; passenger operation not confirmed",
+                       identity_name_match='chinese_alias' if evidence==2 else 'english_only_with_city_context',
+                       identity_matched_aliases=';'.join(matched_aliases),
+                       identity_source_tags=json.dumps({k:v for k,v in candidate['tags'].items() if 'name' in k},ensure_ascii=False),
+                       city_station_distance_m=round(offset,3) if offset is not None else '',
+                       identity_status='name_and_city_proximity_checked_not_manual_verification' if offset is not None else 'chinese_name_only_city_context_missing_needs_review')
             if confidence==1:
                 issues.append({'city':city,'issue':'bounded_spatial_match_requires_visual_review','distance_m':-neg_gap})
             if confidence>1 and -neg_gap>2000:
                 issues.append({'city':city,'issue':'explicit_topology_membership_has_large_location_offset','distance_m':-neg_gap})
-            if place_matches:
-                offset=distance_m(candidate['coord'],(city_row['longitude'],city_row['latitude']))
-                if offset>80000:
-                    issues.append({'city':city,'issue':'selected_station_more_than_80km_from_OSM_city_place','distance_m':offset})
+            if not place_matches:
+                issues.append({'city':city,'issue':'station_identity_has_no_OSM_city_context_requires_review'})
+            elif evidence==1:
+                issues.append({'city':city,'issue':'english_only_station_identity_requires_review'})
             if not place_matches:
                 city_row.update(longitude=candidate['coord'][0],latitude=candidate['coord'][1],
                                 layout_osm_type=candidate['osm_type'],layout_osm_id=candidate['osm_id'],
                                 layout_source=candidate['source'],layout_status='station_layout_fallback_not_city_center')
         elif found_station:
             row.update(match_status='station_found_no_reliable_track_match',note=f'No explicit stop or track node within {SNAP_METERS:g} m')
+        elif rejected_station:
+            row.update(match_status='station_identity_candidates_rejected',
+                       identity_status='no_identity_candidate_passed',
+                       note='Name/city identity gate rejected all candidates; see station_candidate_rejections.csv; no substitute invented')
         if not aliases:
             row.update(match_status='no_heavy_rail_representative_selected',note='澳门轻轨不在 railway=rail 筛选口径内；不添加虚拟大陆连接')
         rows.append(row); city_rows.append(city_row)

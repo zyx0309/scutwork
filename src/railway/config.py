@@ -54,3 +54,6 @@ CITY_ENGLISH = ['Beijing','Tianjin','Shanghai','Chongqing','Shijiazhuang','Taiyu
 ATTRIBUTION = '© OpenStreetMap contributors; ODbL 1.0; https://www.openstreetmap.org/copyright'
 DISTANCE_LABEL = '基于 OSM 铁路线形计算的几何里程（km）'
 SNAP_METERS = 150.0
+# A safety gate, not a claim that every station within this radius belongs to a city.
+CITY_STATION_MAX_METERS = 80000.0
+STATION_IDENTITY_VERSION = 2

@@ -2,6 +2,7 @@ __pycache__/
 .venv/
 .cache/
 logs/
+backups/
 outputs/submission/*.zip
 data/raw/
 data/cache/

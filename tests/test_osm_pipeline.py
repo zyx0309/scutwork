@@ -14,7 +14,7 @@ from railway.extract import classify
 from railway.graph import Edge,RailGraph,geometry_km,build_edges,compress_cities,select_station_access
 from railway.export import validate_path,segment_route
 from railway.pipeline import local_inputs,run
-from railway.stations import map_stations
+from railway.stations import map_stations,station_aliases,name_evidence
 from railway.common import native_osmium_filename
 
 def fixture(raw):
@@ -102,6 +102,31 @@ class GeometryAndTopologyTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d,patch('subprocess.run',side_effect=AssertionError('Network attempted')):
             with self.assertRaises(FileNotFoundError): local_inputs(Path(d),['china','taiwan'])
 
+    def test_dated_local_pbf_is_used_offline(self):
+        from unittest.mock import patch
+        with tempfile.TemporaryDirectory() as d:
+            raw=Path(d)/'raw'; fixture(raw)
+            (raw/'china-latest.osm.pbf').rename(raw/'china-261013.osm.pbf')
+            (raw/'taiwan-latest.osm.pbf').rename(raw/'taiwan-20261013.osm.pbf')
+            with patch('subprocess.run',side_effect=AssertionError('Network attempted')):
+                paths,manifest=local_inputs(raw,['china','taiwan'])
+            self.assertEqual([p.name for p in paths],['china-261013.osm.pbf','taiwan-20261013.osm.pbf'])
+            self.assertEqual(manifest['china']['local_filename'],'china-261013.osm.pbf')
+
+    def test_ambiguous_dated_local_files_are_not_guessed(self):
+        with tempfile.TemporaryDirectory() as d:
+            raw=Path(d)
+            for name in ['china-261012.osm.pbf','china-261013.osm.pbf']: (raw/name).touch()
+            with self.assertRaisesRegex(ValueError,'多个日期版'):
+                local_inputs(raw,['china'])
+
+    def test_canonical_local_filename_precedes_dated_file(self):
+        with tempfile.TemporaryDirectory() as d:
+            raw=Path(d)/'raw';fixture(raw)
+            (raw/'china-261013.osm.pbf').write_bytes(b'not selected')
+            paths,_=local_inputs(raw,['china'])
+            self.assertEqual(paths[0].name,'china-latest.osm.pbf')
+
     def test_station_stop_area_and_snap_threshold(self):
         # A real topological relation in an artificial fixture beats spatial snapping.
         nodes=[(1,1,'fixture',{'lon':113.,'lat':23.,'tags':{'railway':'station','name':'广州站'}}),
@@ -131,6 +156,23 @@ class GeometryAndTopologyTests(unittest.TestCase):
         self.assertEqual(compress_cities(graph,{}),[])
 
 class EndToEndFixtureTests(unittest.TestCase):
+    def test_old_station_graph_cache_rebuilt_but_extraction_reused(self):
+        from unittest.mock import patch
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d); fixture(root/'raw')
+            run(root/'raw',root/'cache',root/'outputs',make_plots=False,test_fixture=True)
+            metadata=root/'cache/graph.json'
+            old=json.loads(metadata.read_text()); old['fingerprint']['graph_version']=4
+            old['fingerprint'].pop('station_identity',None)
+            metadata.write_text(json.dumps(old),encoding='utf-8')
+            with patch('railway.pipeline.map_stations',wraps=map_stations) as mapper, \
+                 patch('railway.extract.WaysRelations.apply_file',side_effect=AssertionError('PBF rescanned despite valid subset')):
+                q=run(root/'raw',root/'cache',root/'outputs',make_plots=False,test_fixture=True)
+            self.assertEqual(mapper.call_count,1)
+            self.assertEqual(q['mapped_stations'],3)
+            self.assertIn('station_identity',json.loads(metadata.read_text())['fingerprint'])
+            self.assertTrue((root/'outputs/station_candidate_rejections.csv').exists())
+
     def test_offline_pbf_to_exports_and_repeatable_cache(self):
         from unittest.mock import patch
         with tempfile.TemporaryDirectory(prefix='铁路 测试 ') as d:
@@ -168,5 +210,71 @@ class EndToEndFixtureTests(unittest.TestCase):
             self.assertEqual(q['guangzhou_lanzhou']['status'],'unreachable')
             self.assertFalse((root/'outputs/guangzhou_lanzhou_path.geojson').exists())
             self.assertFalse((root/'outputs/guangzhou_lanzhou_segments.csv').exists())
+
+class StationIdentityRegressionTests(unittest.TestCase):
+    """Synthetic collision cases, not claims about unreceived live OSM name tags."""
+    def node(self,ident,coord,**tags):
+        return (ident,1,'synthetic_collision_fixture',{'lon':coord[0],'lat':coord[1],'tags':tags})
+
+    def collision_data(self,wrong_name='浮洲'):
+        nodes=[self.node(1,(119.29,26.08),railway='station',name='福州'),
+               self.node(2,(119.2901,26.08)),self.node(3,(119.30,26.08)),
+               self.node(10,(121.44476,25.00416)),self.node(11,(121.45,25.00416)),
+               self.node(20,(119.29,26.07),place='city',name='福州市'),
+               self.node(21,(121.44,25.0),place='city',name='浮洲',**{'name:en':'Fuzhou','capital':'yes','population':'99999999'})]
+        ways=[(100,1,'fixture',{'tags':{'railway':'rail'},'refs':[2,3]}),
+              (101,1,'fixture',{'tags':{'railway':'rail'},'refs':[10,11]})]
+        relations=[(200,1,'fixture',{'tags':{'public_transport':'stop_area','name':wrong_name,'name:en':'Fuzhou Railway Station'},
+                                    'members':[('n',10,'stop')]})]
+        return nodes,ways,relations
+
+    def test_fuzhou_chinese_conflict_beats_wrong_topology(self):
+        rows,cities,_,_,issues=map_stations(*self.collision_data())
+        row=next(r for r in rows if r['city']=='福州')
+        self.assertEqual(row['osm_id'],1)
+        self.assertEqual(row['track_node_id'],2)
+        self.assertEqual(row['match_status'],'spatial_match_needs_review')
+        self.assertEqual(row['identity_name_match'],'chinese_alias')
+        self.assertEqual(next(r for r in cities if r['city']=='福州')['layout_osm_id'],20)
+        rejected=[r for r in issues if r['issue']=='station_identity_candidate_rejected' and r['osm_id']==200]
+        self.assertEqual(rejected[0]['reason'],'english_alias_conflicts_with_chinese_name')
+        self.assertGreater(rejected[0]['city_station_distance_m'],80000)
+
+    def test_distant_even_exact_chinese_name_is_rejected(self):
+        rows,_,_,_,issues=map_stations(*self.collision_data(wrong_name='福州'))
+        self.assertEqual(next(r for r in rows if r['city']=='福州')['osm_id'],1)
+        self.assertTrue(any(r.get('reason')=='station_outside_city_distance_limit' for r in issues))
+
+    def test_only_bad_identity_preserves_city_unmapped(self):
+        nodes,ways,relations=self.collision_data(); nodes=[n for n in nodes if n[0]!=1]
+        rows,cities,_,_,_=map_stations(nodes,ways,relations)
+        row=next(r for r in rows if r['city']=='福州')
+        self.assertEqual(row['match_status'],'station_identity_candidates_rejected')
+        self.assertEqual(row['track_node_id'],'')
+        self.assertEqual(len(cities),34)
+
+    def test_chinese_name_precedes_nearby_english_only_on_track(self):
+        nodes,ways,_=self.collision_data()
+        nodes.append(self.node(4,(119.2902,26.08),railway='station',name='Fuzhou Railway Station'))
+        ways.append((102,1,'fixture',{'tags':{'railway':'rail'},'refs':[3,4]}))
+        rows,*_=map_stations(nodes,ways,[])
+        self.assertEqual(next(r for r in rows if r['city']=='福州')['osm_id'],1)
+
+    def test_english_only_needs_independent_city_context(self):
+        nodes=[self.node(1,(119.29,26.08),railway='station',name='Fuzhou Railway Station'),
+               self.node(2,(119.30,26.08))]
+        ways=[(100,1,'fixture',{'tags':{'railway':'rail'},'refs':[1,2]})]
+        rows,*_=map_stations(nodes,ways,[])
+        self.assertEqual(next(r for r in rows if r['city']=='福州')['track_node_id'],'')
+        nodes.append(self.node(20,(119.29,26.07),place='city',name='福州'))
+        rows,*_=map_stations(nodes,ways,[])
+        row=next(r for r in rows if r['city']=='福州')
+        self.assertEqual(row['track_node_id'],1)
+        self.assertEqual(row['identity_name_match'],'english_only_with_city_context')
+
+    def test_train_station_chinese_suffix_and_traditional_names(self):
+        for expected,actual in [('广州站','广州火车站'),('臺北車站','台北车站')]:
+            score,_,reason=name_evidence({'name':actual},station_aliases({'name':expected}))
+            self.assertEqual(score,2); self.assertEqual(reason,'')
 
 if __name__=='__main__': unittest.main()

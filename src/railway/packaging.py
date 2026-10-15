@@ -6,7 +6,7 @@ def package_project(root,target,include_outputs=True):
     root=Path(root).resolve(); target=Path(target).resolve(); target.parent.mkdir(parents=True,exist_ok=True)
     included=[]
     dirs=['src','tests','tools']+(['outputs'] if include_outputs else [])
-    files=['README.md','WINDOWS_GUIDE.md','开始使用.txt','requirements.txt','install.bat','run.bat','install_windows.bat','run_windows.bat',
+    files=['README.md','WINDOWS_GUIDE.md','STATION_FIX_GUIDE.md','开始使用.txt','requirements.txt','install.bat','run.bat','run_fixed.bat','install_windows.bat','run_windows.bat',
            'test_windows.bat','DATA_LICENSE.md','LICENSE','data/raw/README.txt','.gitignore']
     for directory in dirs:
         for p in (root/directory).rglob('*'):

@@ -1,5 +1,9 @@
 这是 OSM 铁路网络项目。全国真实数据还没有在云端运行；请在你的电脑上处理已有地图。
 
+如果已经运行过、现在要修复“福州误匹配台湾浮洲”：
+先阅读 STATION_FIX_GUIDE.md，将修正包内容覆盖到原项目，再双击 run_fixed.bat。
+它会备份旧 outputs 并重建车站图；不要删除 data/cache，也不用重新安装已有的 .venv。
+
 1. 下载并安装 Python 3.12.10 Windows 64 位：
    https://www.python.org/downloads/release/python-31210/
    页面底部 Files 中选 Windows installer (64-bit)。
@@ -8,7 +12,7 @@
 2. 将项目 ZIP 全部解压。不要在压缩包里直接运行。
    文件夹可以含中文和空格，例如 D:\人工智能作业\铁路 项目\OSM_Railway_Project。
 
-3. 双击 install.bat。等它显示“安装完成”，再按键关闭。
+3. 双击 install.bat。等它显示 Installed / 已完成，再按键关闭。
    依赖装到项目自己的 .venv，不需要你操作 Python 命令行。
 
 4. 将你下载的文件复制到 data\raw\：
@@ -21,7 +25,7 @@
    保持电脑通电，避免休眠；首次扫描较久。建议关闭占内存较多的程序。
    当前约 16 GB 可用内存可以尝试；全国数据峰值未实测，不保证一定足够。
 
-7. 看到“处理完成”后，查看：
+7. 看到 Completed / 已完成后，查看：
    outputs\run_status.json：应为 completed_real_osm。
    outputs\RESULTS.md：统计和广州至兰州可达性。
    outputs\figures\：网络图、车站检查图，成功找到路径时有路线图。

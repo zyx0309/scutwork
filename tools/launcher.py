@@ -8,6 +8,15 @@ import sys
 
 ROOT=Path(__file__).resolve().parents[1]
 
+def backup_outputs(root=ROOT):
+    """Rename prior outputs on the same disk; leave PBFs, caches and venv untouched."""
+    root=Path(root); outputs=root/'outputs'
+    if not outputs.exists(): return None
+    backups=root/'backups'; backups.mkdir(exist_ok=True)
+    target=backups/f'outputs_{datetime.now():%Y%m%d_%H%M%S_%f}'
+    outputs.rename(target)
+    return target
+
 def execute(command,log,environment):
     print('执行：'+' '.join(str(s) for s in command),flush=True)
     process=subprocess.Popen(command,cwd=ROOT,env=environment,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,
@@ -25,7 +34,10 @@ def main():
     parser=argparse.ArgumentParser()
     parser.add_argument('--install',action='store_true')
     parser.add_argument('--test',action='store_true')
+    parser.add_argument('--backup-outputs',action='store_true',help='Move previous outputs to backups before the default local rerun')
     args,remaining=parser.parse_known_args()
+    if args.backup_outputs and (args.install or args.test or any(a.split('=',1)[0]=='--output-dir' for a in remaining)):
+        parser.error('--backup-outputs is for the default processing output directory only')
     logs=ROOT/'logs'; logs.mkdir(exist_ok=True)
     log_path=logs/f"{'install' if args.install else 'tests' if args.test else 'run'}_{datetime.now():%Y%m%d_%H%M%S}.log"
     environment=os.environ.copy()
@@ -34,6 +46,11 @@ def main():
         with log_path.open('w',encoding='utf-8') as log:
             log.write(f'Project root: {ROOT}\nPython: {sys.version}\n')
             print(f'项目目录：{ROOT}\n运行日志：{log_path}',flush=True)
+            if args.backup_outputs:
+                backup=backup_outputs()
+                if backup:
+                    message=f'旧成果已移动备份至：{backup}；data、缓存与虚拟环境保留。'
+                    print(message,flush=True); log.write(message+'\n'); log.flush()
             if args.install:
                 commands=[[sys.executable,'-m','pip','install','--disable-pip-version-check','-r',str(ROOT/'requirements.txt')],
                           [sys.executable,'-m','pip','check']]

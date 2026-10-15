@@ -6,7 +6,7 @@ import numpy as np
 from scipy.sparse import csr_matrix
 from scipy.sparse.csgraph import connected_components,dijkstra
 from .common import save_csv,save_json,now
-from .config import CITY_ORDER,ATTRIBUTION,DISTANCE_LABEL
+from .config import CITY_ORDER,ATTRIBUTION,DISTANCE_LABEL,STATION_IDENTITY_VERSION,CITY_STATION_MAX_METERS
 from .graph import geometry_km,GEOD
 
 def validate_path(graph,path,start,end,barriers=()):
@@ -74,6 +74,12 @@ def write_outputs(out,graph,station_rows,city_rows,city_edges,station_names,meta
     out=Path(out); out.mkdir(parents=True,exist_ok=True)
     save_csv(out/'cities.csv',city_rows,list(city_rows[0]))
     save_csv(out/'city_stations.csv',station_rows,list(station_rows[0]))
+    rejected=[r for r in station_issues if r['issue']=='station_identity_candidate_rejected']
+    save_csv(out/'station_candidate_rejections.csv',[
+        {**r,'matched_aliases':';'.join(r['matched_aliases']),
+         'name_tags':json.dumps(r['name_tags'],ensure_ascii=False)} for r in rejected],
+        ['city','reason','osm_type','osm_id','station_name','longitude','latitude',
+         'city_station_distance_m','matched_aliases','name_tags','source'])
     anchors={r['city']:int(r['track_node_id']) for r in station_rows
              if r['track_node_id']!='' and int(r['track_node_id']) in graph.index}
     all_barriers=set(anchors.values()); features=[]; table=[]; maximum_edge_error=0.
@@ -165,6 +171,10 @@ def write_outputs(out,graph,station_rows,city_rows,city_edges,station_names,meta
              'city_graph':stats,'rail_graph':{'junction_node_count':len(graph.ids),'edge_count':len(graph.edges),
                          'component_count':int(graph.component_count),'largest_components':counts.most_common(20)},
              'mapped_stations':len(anchors),'topology_matched_stations':sum(r['match_status']=='topology_matched' for r in station_rows),
+             'station_identity_policy':{'version':STATION_IDENTITY_VERSION,
+                 'chinese_alias_priority':True,'english_conflicting_chinese_names_rejected':True,
+                 'max_city_station_m':CITY_STATION_MAX_METERS,'rejected_candidate_count':len(rejected),
+                 'note':'Name and city proximity gates do not establish manual verification or passenger usability'},
              'spatial_matches_pending_review':[r['city'] for r in station_rows if r['match_status']=='spatial_match_needs_review'],
              'unmapped_stations':[r['city'] for r in station_rows if r['city'] not in anchors],
              'layout_coordinates_missing':[r['city'] for r in city_rows if r['longitude']==''],
