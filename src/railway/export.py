@@ -77,9 +77,11 @@ def write_outputs(out,graph,station_rows,city_rows,city_edges,station_names,meta
     rejected=[r for r in station_issues if r['issue']=='station_identity_candidate_rejected']
     save_csv(out/'station_candidate_rejections.csv',[
         {**r,'matched_aliases':';'.join(r['matched_aliases']),
-         'name_tags':json.dumps(r['name_tags'],ensure_ascii=False)} for r in rejected],
+         'name_tags':json.dumps(r['name_tags'],ensure_ascii=False),
+         'transport_tags':json.dumps(r.get('transport_tags',{}),ensure_ascii=False),
+         'excluded_mode_stop_nodes':';'.join(str(n) for n in r.get('excluded_mode_stop_nodes',[]))} for r in rejected],
         ['city','reason','osm_type','osm_id','station_name','longitude','latitude',
-         'city_station_distance_m','matched_aliases','name_tags','source'])
+         'city_station_distance_m','matched_aliases','name_tags','source','transport_tags','excluded_mode_stop_nodes'])
     anchors={r['city']:int(r['track_node_id']) for r in station_rows
              if r['track_node_id']!='' and int(r['track_node_id']) in graph.index}
     all_barriers=set(anchors.values()); features=[]; table=[]; maximum_edge_error=0.
@@ -173,6 +175,7 @@ def write_outputs(out,graph,station_rows,city_rows,city_edges,station_names,meta
              'mapped_stations':len(anchors),'topology_matched_stations':sum(r['match_status']=='topology_matched' for r in station_rows),
              'station_identity_policy':{'version':STATION_IDENTITY_VERSION,
                  'chinese_alias_priority':True,'english_conflicting_chinese_names_rejected':True,
+                 'explicit_non_heavy_station_modes_rejected':True,'stop_area_member_modes_checked':True,
                  'max_city_station_m':CITY_STATION_MAX_METERS,'rejected_candidate_count':len(rejected),
                  'note':'Name and city proximity gates do not establish manual verification or passenger usability'},
              'spatial_matches_pending_review':[r['city'] for r in station_rows if r['match_status']=='spatial_match_needs_review'],

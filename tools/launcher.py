@@ -35,10 +35,13 @@ def main():
     parser.add_argument('--install',action='store_true')
     parser.add_argument('--test',action='store_true')
     parser.add_argument('--diagnose-stations',action='store_true')
+    parser.add_argument('--collect-station-diagnostics',action='store_true')
     parser.add_argument('--backup-outputs',action='store_true',help='Move previous outputs to backups before the default local rerun')
     args,remaining=parser.parse_known_args()
-    if args.diagnose_stations and (args.install or args.test or args.backup_outputs or remaining):
+    if args.diagnose_stations and (args.install or args.test or args.backup_outputs or args.collect_station_diagnostics or remaining):
         parser.error('--diagnose-stations cannot be combined with processing or installation options')
+    if args.collect_station_diagnostics and (args.install or args.test or any(a.split('=',1)[0]=='--output-dir' for a in remaining)):
+        parser.error('--collect-station-diagnostics requires the default processing output directory')
     if args.backup_outputs and (args.install or args.test or any(a.split('=',1)[0]=='--output-dir' for a in remaining)):
         parser.error('--backup-outputs is for the default processing output directory only')
     logs=ROOT/'logs'; logs.mkdir(exist_ok=True)
@@ -63,6 +66,8 @@ def main():
                 commands=[[sys.executable,'-u',str(ROOT/'tools/station_diagnostics.py')]]
             else:
                 commands=[[sys.executable,'-u',str(ROOT/'src/run.py'),*remaining]]
+                if args.collect_station_diagnostics:
+                    commands.append([sys.executable,'-u',str(ROOT/'tools/station_diagnostics.py')])
             for command in commands:
                 code=execute(command,log,environment)
                 if code:

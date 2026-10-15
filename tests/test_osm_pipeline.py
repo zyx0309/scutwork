@@ -1,4 +1,4 @@
-"""Artificial, explicitly labelled fixtures. These do not establish real routes."""
+"""Synthetic fixtures and a labeled local OSM regression extract; no national route validation."""
 import json
 import math
 import sys
@@ -14,7 +14,7 @@ from railway.extract import classify
 from railway.graph import Edge,RailGraph,geometry_km,build_edges,compress_cities,select_station_access
 from railway.export import validate_path,segment_route
 from railway.pipeline import local_inputs,run
-from railway.stations import map_stations,station_aliases,name_evidence
+from railway.stations import map_stations,station_aliases,name_evidence,station_type
 from railway.common import native_osmium_filename
 
 def fixture(raw):
@@ -243,7 +243,7 @@ class EndToEndFixtureTests(unittest.TestCase):
             self.assertFalse((root/'outputs/guangzhou_lanzhou_segments.csv').exists())
 
 class StationIdentityRegressionTests(unittest.TestCase):
-    """Synthetic collision cases, not claims about unreceived live OSM name tags."""
+    """Synthetic collisions plus one explicitly sourced real diagnostic regression."""
     def node(self,ident,coord,**tags):
         return (ident,1,'synthetic_collision_fixture',{'lon':coord[0],'lat':coord[1],'tags':tags})
 
@@ -307,5 +307,50 @@ class StationIdentityRegressionTests(unittest.TestCase):
         for expected,actual in [('广州站','广州火车站'),('臺北車站','台北车站')]:
             score,_,reason=name_evidence({'name':actual},station_aliases({'name':expected}))
             self.assertEqual(score,2); self.assertEqual(reason,'')
+
+    def test_actual_fuzhou_subway_members_cannot_override_train_station(self):
+        path=Path(__file__).parent/'fixtures/fuzhou_mode_evidence.json'
+        fixture=json.loads(path.read_text(encoding='utf-8'))
+        nodes=[(n['osm_id'],1,'china-latest.osm.pbf',{k:n[k] for k in ['lon','lat','tags']}) for n in fixture['nodes']]
+        ways=[(w['osm_id'],w['version'],w['source'],w['data']) for w in fixture['ways']]
+        relations=[(r['osm_id'],r['version'],r['source'],r['data']) for r in fixture['relations']]
+        rows,_,_,_,issues=map_stations(nodes,ways,relations)
+        fuzhou=next(r for r in rows if r['city']=='福州')
+        self.assertEqual(fuzhou['osm_id'],6999105218)
+        self.assertEqual(fuzhou['station_name'],'福州')
+        self.assertNotEqual(fuzhou['track_node_id'],9521844144)
+        self.assertEqual(json.loads(fuzhou['station_raw_tags'])['train'],'yes')
+        self.assertTrue(any(r.get('osm_id')==19659201 and r.get('reason')=='stop_area_only_has_excluded_transport_stops' for r in issues))
+
+    def test_explicit_transit_flags_on_rail_stop_and_station_are_rejected(self):
+        for tags in [{'railway':'stop','subway':'yes'}, {'railway':'station','subway':'yes'},
+                     {'railway':'station','train':'no'}, {'railway':'station','station':'monorail'}]:
+            self.assertFalse(station_type(tags))
+        self.assertEqual(classify({'railway':'rail','subway':'yes'})[0],'exclude')
+        self.assertTrue(station_type({'railway':'station','train':'yes'}))
+
+    def test_stronger_train_identity_is_retained_without_forcing_anchor(self):
+        nodes=[self.node(1,(119.29,26.08),railway='station',name='福州',train='yes'),
+               self.node(2,(119.295,26.08),railway='station',name='福州'),
+               self.node(3,(119.30,26.08))]
+        ways=[(100,1,'fixture',{'tags':{'railway':'rail'},'refs':[2,3]})]
+        rows,*_=map_stations(nodes,ways,[])
+        fuzhou=next(r for r in rows if r['city']=='福州')
+        self.assertEqual(fuzhou['osm_id'],1)
+        self.assertEqual(fuzhou['track_node_id'],'')
+        self.assertEqual(fuzhou['match_status'],'station_found_no_reliable_track_match')
+        self.assertNotEqual(fuzhou['station_longitude'],'')
+
+    def test_mixed_stop_area_uses_only_heavy_rail_stops(self):
+        nodes=[self.node(1,(119.29,26.08),railway='station',name='福州',train='yes'),
+               self.node(2,(119.2901,26.08),railway='stop',name='福州',subway='yes'),
+               self.node(3,(119.30,26.08),railway='stop',name='福州',train='yes')]
+        ways=[(100,1,'fixture',{'tags':{'railway':'rail'},'refs':[2,3]})]
+        relations=[(200,1,'fixture',{'tags':{'public_transport':'stop_area','name':'福州'},
+                                    'members':[('n',1,''),('n',2,'stop'),('n',3,'stop')]})]
+        rows,_,_,names,_=map_stations(nodes,ways,relations)
+        fuzhou=next(r for r in rows if r['city']=='福州')
+        self.assertEqual(fuzhou['track_node_id'],3)
+        self.assertNotIn(2,names)
 
 if __name__=='__main__': unittest.main()

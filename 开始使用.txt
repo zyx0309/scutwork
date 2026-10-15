@@ -4,6 +4,9 @@
 先阅读 STATION_FIX_GUIDE.md，将修正包内容覆盖到原项目，再双击 run_fixed.bat。
 它会备份旧 outputs 并重建车站图；不要删除 data/cache，也不用重新安装已有的 .venv。
 
+如果已发现同名地铁停靠点被选为国铁站，使用较新的 STATION_MODE_FIX_GUIDE.md：
+更新后双击 run_mode_fixed.bat，一次重跑后自动生成小型诊断包。
+
 1. 下载并安装 Python 3.12.10 Windows 64 位：
    https://www.python.org/downloads/release/python-31210/
    页面底部 Files 中选 Windows installer (64-bit)。

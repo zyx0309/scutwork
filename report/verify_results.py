@@ -66,6 +66,15 @@ def verify(folder=ROOT/'input'):
     assert len(edges)==q['city_graph']['edge_count'] and len(components)==q['city_graph']['component_count']
     matches=[r for r in stations if r['city']=='福州']
     wrong=bool(matches and matches[0]['station_name']=='浮洲')
+    mode_wrong=False; diagnostic=None
+    if (folder/'station_diagnostics.json').is_file():
+        diagnostic=json.loads((folder/'station_diagnostics.json').read_text(encoding='utf-8-sig'))
+        if diagnostic['source_quality_generated_at']!=q['generated_at'] or diagnostic['source_run_status']!=state:
+            raise ValueError('Mixed diagnostic/results snapshots')
+        fuzhou=diagnostic['evidence']['福州']
+        anchor=fuzhou.get('selected_track_node')
+        mode_wrong=bool(anchor and anchor['data']['tags'].get('subway')=='yes' and
+                        str(anchor['osm_id'])==matches[0]['track_node_id'])
     result={'input_sha256':{p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in folder.iterdir() if p.is_file()},
       'city_count':len(stations),'city_order_matches':True,'edge_count':len(edges),'invalid_edges':[],
       'duplicate_city_edges':[],'independently_recomputed_components':components,'component_count':len(components),
@@ -78,9 +87,12 @@ def verify(folder=ROOT/'input'):
       'route_segment_count':len(segments),'segments_sum_km':total,'segment_sum_difference_km':total-route['total_km'],
       'adjacent_segment_track_nodes_continuous':continuity,'segment_endpoint_matches_route_anchors':endpoints,
       'cumulative_distance_consistent':cumulative,'confirmed_fuzhou_fuzhou_name_collision':wrong,
-      'candidate_mappings_after_rejecting_known_error':sum(r['component_id']!='' for r in stations)-int(wrong),
+      'confirmed_fuzhou_wrong_transport_mode':mode_wrong,
+      'source_completed_at':state['completed_at'],
+      'source_graph_version':state.get('graph_version'),'source_station_identity_version':state.get('station_identity_version'),
+      'candidate_mappings_after_rejecting_known_error':sum(r['component_id']!='' for r in stations)-int(wrong or mode_wrong),
       'raw_geodesic_recomputation_performed_here':False,
-      'scope':'City graph and segment-table checks only; original track geometries and PBF have not been independently re-read here.'}
+      'scope':'City/segment tables and optional raw station diagnostics; complete track geometries and PBF have not been independently re-read here.'}
     if wrong:
         f=matches[0]
         result['confirmed_mapping_error']={'city':'福州','actual_matched_name':f['station_name'],'osm_id':f['osm_id'],
@@ -88,9 +100,17 @@ def verify(folder=ROOT/'input'):
           'distance_from_OSM_city_place_m':next(x['distance_m'] for x in q['station_issues'] if x['city']=='福州')}
         result['rejected_fuzhou_mapping_has_city_degree_zero']=len(graph['福州'])==0
         assert len(graph['福州'])==0
+    if mode_wrong:
+        f=matches[0];anchor=diagnostic['evidence']['福州']['selected_track_node']
+        result['confirmed_mapping_error']={'issue':'excluded_transport_mode_stop_used_as_heavy_rail_representative',
+            'city':'福州','matched_station_object_type':f['osm_type'],'matched_station_object_id':f['osm_id'],
+            'track_node_id':anchor['osm_id'],'actual_track_node_tags':anchor['data']['tags']}
+        result['rejected_fuzhou_mapping_has_city_degree_zero']=len(graph['福州'])==0
+        assert len(graph['福州'])==0
     return result
 
 if __name__=='__main__':
-    audit=verify(Path(sys.argv[1]) if len(sys.argv)>1 else ROOT/'input')
-    (ROOT/'independent_audit.json').write_text(json.dumps(audit,ensure_ascii=False,indent=2),encoding='utf-8')
+    folder=Path(sys.argv[1]) if len(sys.argv)>1 else ROOT/'input'
+    audit=verify(folder)
+    (folder.resolve().parent/'independent_audit.json').write_text(json.dumps(audit,ensure_ascii=False,indent=2),encoding='utf-8')
     print('Result-table audit completed; confirmed mapping errors are retained in the audit, not overwritten.')

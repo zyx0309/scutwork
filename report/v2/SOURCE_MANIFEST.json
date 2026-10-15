@@ -1,0 +1,119 @@
+{
+  "generated_at_utc": "2026-10-15T03:28:10.128276+00:00",
+  "generated_at_beijing": "2026-10-15T11:28:10.128276+08:00",
+  "analysis_code_commit": "a27a4e833922ef6dd0f138316452ac92c9daffe5",
+  "result_graph_version": 5,
+  "result_station_identity_version": 2,
+  "bundled_mode_fix_requires_national_rerun": true,
+  "repository": "https://github.com/zyx0309/scutwork",
+  "uploaded_result_files_independently_hashed_here": {
+    "RESULTS.md": {
+      "bytes": 940,
+      "sha256": "b2462177bef4b124e740ed4e1a7b1d0e641a5bb61b352b0d5252ed6e495329a1"
+    },
+    "SCOPE.txt": {
+      "bytes": 145,
+      "sha256": "832aa6ec2eb1515da9f00c6db2009a98976aa741c5b8ce9af3afbdadb0ba9a7e"
+    },
+    "cities.csv": {
+      "bytes": 3789,
+      "sha256": "f012cf43644fc211b90071bbfcfde8ed3605a91cb3593e29228d6f0140f4395a"
+    },
+    "city_edges.csv": {
+      "bytes": 5796124,
+      "sha256": "61b99e3dadbe129d9db0203b3f28044c16b054c26698b84061f131285abd242f"
+    },
+    "city_stations.csv": {
+      "bytes": 21024,
+      "sha256": "e239ffee385083d19ffcd1a971dcc0d704d1150ffc1cf255383d74702652e976"
+    },
+    "data_quality.json": {
+      "bytes": 134277,
+      "sha256": "1f9cdcdd2e7277c45bc01ca62124e67a787c4346ff24cc7f2446acc9c3d87811"
+    },
+    "figures/guangzhou_lanzhou_route.png": {
+      "bytes": 780275,
+      "sha256": "b0a5110abeb71c93e078dbfa5e0da74dff8ee5d09b735d7f880923a9338216fe"
+    },
+    "figures/station_checks_detail.png": {
+      "bytes": 1582712,
+      "sha256": "a461a2731398a06e1b6a93a8bfaad63f294854da96b2b19953fa5c996f643bce"
+    },
+    "guangzhou_lanzhou_segments.csv": {
+      "bytes": 61025,
+      "sha256": "7441466cfe23661dad20f205433e31cc70266412eb82cd1fd87b7bde885058a5"
+    },
+    "guangzhou_lanzhou_status.json": {
+      "bytes": 4772,
+      "sha256": "f7690c5dc4bf5f23265daa0d668491fc5f8390ac3f3f46a1ce4ebcd3fa4d0075"
+    },
+    "run_status.json": {
+      "bytes": 257,
+      "sha256": "93f9535465500ce028caf3a9c2d2de51d3917d9be26fd2e19940173a8e5f0e90"
+    },
+    "station_candidate_rejections.csv": {
+      "bytes": 3862,
+      "sha256": "aa03a903de924e1b37bfea264ce2cd58e3a2fc1cc385653f324fd3745bce86da"
+    },
+    "station_diagnostics.json": {
+      "bytes": 319409,
+      "sha256": "cf230f39eb7efa45e5a32eb1dec8e6e780268e0ffcf05cb0a472d38011100178"
+    }
+  },
+  "original_pbf_provenance_copied_from_user_run_not_rehashed_here": {
+    "china": {
+      "source_url": "https://download.geofabrik.de/asia/china-latest.osm.pbf",
+      "origin": "user_supplied_local",
+      "registered_at": "2026-10-14T13:25:39.468786+00:00",
+      "size": 1608188315,
+      "sha256": "f1c602a55455819262b8183f0c0cb64cd95b7f78cabc3ac98f4e8762d8e80fa6",
+      "verified_header": true,
+      "upstream_checksum_status": "not_checked_offline",
+      "generator": "osmium/1.16.0",
+      "replication_timestamp": "2026-10-13T20:21:31Z",
+      "header_bounds": [
+        [
+          73.41788,
+          14.27437,
+          134.803619,
+          53.65559
+        ]
+      ]
+    },
+    "taiwan": {
+      "source_url": "https://download.geofabrik.de/asia/taiwan-latest.osm.pbf",
+      "origin": "user_supplied_local",
+      "registered_at": "2026-10-14T13:25:40.699811+00:00",
+      "size": 327561702,
+      "sha256": "f0854a692a189189fe54fb5e6fb222ad32db7f29bfe0fc26b05343a9d8f2a328",
+      "verified_header": true,
+      "upstream_checksum_status": "not_checked_offline",
+      "generator": "osmium/1.16.0",
+      "replication_timestamp": "2026-10-13T20:21:31Z",
+      "header_bounds": [
+        [
+          118.1036,
+          20.72799,
+          122.9312,
+          26.60305
+        ]
+      ]
+    }
+  },
+  "independent_verification_scope": "Exported city graph and segment tables only; no national PBF or full track geometry reread.",
+  "known_confirmed_issue": "Fuzhou selected stop 9521844144 has subway=yes; train station 6999105218 is a distinct object. Wrong-mode anchor rejected in derived audit, original input retained.",
+  "national_run_repeated_after_fix": false,
+  "national_run_after_initial_name_fix": true,
+  "national_run_after_latest_mode_fix": false,
+  "full_track_geometry_received_here": false,
+  "actual_route_png_received": true,
+  "map_attribution": "© OpenStreetMap contributors / ODbL 1.0",
+  "font": {
+    "name": "Noto Sans SC",
+    "license": "SIL Open Font License 1.1",
+    "source_url": "https://raw.githubusercontent.com/notofonts/noto-cjk/main/Sans/Variable/TTF/Subset/NotoSansSC-VF.ttf",
+    "download_sha256": "d68bafcb48a2707749396aa12bbbd833cb70401f3a9a689fd2902c7e0d295964",
+    "full_font_files_bundled": false,
+    "subset_embedded_in_pdf": true
+  }
+}

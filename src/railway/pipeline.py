@@ -13,7 +13,7 @@ from .graph import build_edges,select_station_access,compress_cities
 from .export import write_outputs
 from .plotting import plots
 
-GRAPH_VERSION=5
+GRAPH_VERSION=6
 
 def local_pbf_path(raw_dir,region):
     canonical=Path(raw_dir)/f'{region}-latest.osm.pbf'

@@ -6,7 +6,7 @@ import numpy as np
 from pyproj import Transformer
 from scipy.spatial import cKDTree
 from .config import CITY_SPECS, CITY_ENGLISH, SNAP_METERS, CITY_STATION_MAX_METERS
-from .extract import normalized, tag_names, classify
+from .extract import normalized, tag_names, classify,excluded_transport_mode
 from .graph import GEOD
 
 TO_ECEF=Transformer.from_crs('EPSG:4326','EPSG:4978',always_xy=True)
@@ -34,7 +34,7 @@ def name_evidence(tags,expected):
     return 1,sorted(matched),''
 
 def station_type(tags):
-    return tags.get('station') not in {'subway','light_rail','monorail','tram'} and tags.get('railway')!='tram_stop'
+    return not excluded_transport_mode(tags) and tags.get('train')!='no'
 
 def map_stations(nodes,ways,relations):
     coords={ident:(data['lon'],data['lat']) for ident,_,_,data in nodes}
@@ -54,12 +54,12 @@ def map_stations(nodes,ways,relations):
     candidates={}
     for ident,version,source,data in nodes:
         tags=data['tags']
-        if tags.get('railway') in {'station','halt'} and station_type(tags):
+        if tags.get('railway') in {'station','halt'}:
             candidates[('n',ident)]={'osm_type':'node','osm_id':ident,'version':version,'source':source,
                                     'coord':coords[ident],'tags':tags,'geometry_method':'OSM_node'}
     for ident,version,source,data in ways:
         tags=data['tags']
-        if tags.get('railway') in {'station','halt'} and station_type(tags):
+        if tags.get('railway') in {'station','halt'}:
             points=[coords[n] for n in data['refs'] if n in coords]
             if points:
                 coord=tuple(np.mean(points,axis=0))
@@ -70,16 +70,28 @@ def map_stations(nodes,ways,relations):
     for ident,version,source,data in relations:
         tags=data['tags']; members=data['members']
         if tags.get('public_transport')!='stop_area' and tags.get('railway')!='station': continue
-        stops=[ref for t,ref,role in members if t=='n' and ref in all_refs and role.startswith('stop')]
-        for t,ref,role in members:
-            if (t,ref) in candidates: association[(t,ref)].update(stops)
+        raw_stops=[ref for t,ref,role in members if t=='n' and ref in coords and role.startswith('stop')]
+        stops=[ref for ref in raw_stops if ref in all_refs and station_type(node_tags[ref])]
+        excluded_stops=[ref for ref in raw_stops if not station_type(node_tags[ref])]
+        mode_rejection='excluded_stop_area_transport_mode' if not station_type(tags) else \
+            'stop_area_only_has_excluded_transport_stops' if excluded_stops and not stops else ''
+        if not mode_rejection:
+            for t,ref,role in members:
+                if (t,ref) in candidates and station_type(candidates[(t,ref)]['tags']):
+                    association[(t,ref)].update(stops)
         # A named stop-area itself can identify a station without a station building object.
-        if stops and station_type(tags) and any(k.startswith('name') for k in tags):
+        if (stops or (raw_stops and mode_rejection)) and any(k.startswith('name') for k in tags):
+            location_stop=(stops or raw_stops)[0]
+            train_evidence=any(node_tags[n].get('train')=='yes' for n in stops) or any(
+                (t,ref) in candidates and station_type(candidates[(t,ref)]['tags']) and candidates[(t,ref)]['tags'].get('train')=='yes'
+                for t,ref,role in members)
             candidates[('r',ident)]={'osm_type':'relation','osm_id':ident,'version':version,'source':source,
-                                    'coord':coords[stops[0]],'tags':tags,'geometry_method':'stop_area_rail_stop'}
-            association[('r',ident)].update(stops)
+                                    'coord':coords[location_stop],'tags':tags,'geometry_method':'stop_area_rail_stop',
+                                    'mode_rejection':mode_rejection,'excluded_mode_stop_nodes':excluded_stops,
+                                    'train_evidence':train_evidence}
+            if not mode_rejection: association[('r',ident)].update(stops)
         name=tags.get('name:zh') or tags.get('name')
-        if name:
+        if name and not mode_rejection:
             for stop in stops: station_names_on_track[stop]=name
     for n,tags in node_tags.items():
         if n in all_refs and tags.get('railway') in {'station','halt','stop'} and station_type(tags):
@@ -109,15 +121,18 @@ def map_stations(nodes,ways,relations):
              'match_method':'','match_status':'no_matching_station','component_id':'',
              'selection_basis':'明确选定主要重铁站；精确站名匹配，不合并同城其他车站',
              'source':'','note':'','identity_name_match':'','identity_matched_aliases':'',
-             'identity_source_tags':'','city_station_distance_m':'','identity_status':''}
+             'identity_source_tags':'','city_station_distance_m':'','identity_status':'',
+             'station_transport_evidence':'','station_raw_tags':'','track_node_raw_tags':''}
         expected=station_aliases({'alt_name':';'.join(aliases)})
-        matches=[]
+        matches=[]; identity_candidates=[]
         found_station=False; rejected_station=False
         for key,candidate in candidates.items():
             if not expected: continue
             evidence,matched_aliases,rejection=name_evidence(candidate['tags'],expected)
             if not evidence and not rejection: continue
             offset=distance_m(candidate['coord'],(city_row['longitude'],city_row['latitude'])) if place_matches else None
+            if not rejection and (candidate.get('mode_rejection') or not station_type(candidate['tags'])):
+                rejection=candidate.get('mode_rejection') or 'excluded_station_transport_mode'
             if not rejection and offset is not None and offset>CITY_STATION_MAX_METERS:
                 rejection='station_outside_city_distance_limit'
             if not rejection and evidence==1 and not place_matches:
@@ -129,8 +144,11 @@ def map_stations(nodes,ways,relations):
                     'station_name':candidate['tags'].get('name:zh') or candidate['tags'].get('name',''),
                     'longitude':candidate['coord'][0],'latitude':candidate['coord'][1],
                     'city_station_distance_m':offset,'matched_aliases':matched_aliases,
-                    'name_tags':{k:v for k,v in candidate['tags'].items() if 'name' in k}})
+                    'name_tags':{k:v for k,v in candidate['tags'].items() if 'name' in k},
+                    'transport_tags':candidate['tags'],'excluded_mode_stop_nodes':candidate.get('excluded_mode_stop_nodes',[])})
                 continue
+            train_score=2 if candidate['tags'].get('train')=='yes' or candidate.get('train_evidence') else 1
+            identity_candidates.append((evidence,train_score,key,candidate,matched_aliases,offset))
             found_station=True; anchor=None; method=''; confidence=0
             if key[0]=='n' and key[1] in all_refs:
                 anchor=key[1]; method='station_node_on_track'; confidence=3
@@ -143,17 +161,21 @@ def map_stations(nodes,ways,relations):
                     xyz=TO_ECEF.transform(candidate['coord'][0],candidate['coord'][1],0)
                     indices=tree.query_ball_point(xyz,SNAP_METERS)
                     if indices:
-                        eligible=[int(track_ids[i]) for i in indices]
-                        anchor=min(eligible,key=lambda n:(distance_m(candidate['coord'],coords[n]),n))
-                        method='bounded_nearest_OSM_track_node'; confidence=1
+                        eligible=[int(track_ids[i]) for i in indices if station_type(node_tags[int(track_ids[i])])]
+                        if eligible:
+                            anchor=min(eligible,key=lambda n:(distance_m(candidate['coord'],coords[n]),n))
+                            method='bounded_nearest_OSM_track_node'; confidence=1
             if anchor is not None:
                 gap=distance_m(candidate['coord'],coords[anchor])
                 # Relation membership does not need a spatial threshold; it is explicit OSM evidence.
                 if method=='bounded_nearest_OSM_track_node' and gap>SNAP_METERS: continue
-                matches.append((evidence,confidence,anchor in main_refs,-gap,key,candidate,anchor,method,matched_aliases,offset))
+                matches.append((evidence,train_score,confidence,anchor in main_refs,-gap,key,candidate,anchor,method,matched_aliases,offset))
+        if identity_candidates:
+            strongest_identity=max((r[0],r[1]) for r in identity_candidates)
+            matches=[r for r in matches if (r[0],r[1])==strongest_identity]
         if matches:
-            evidence,confidence,_,neg_gap,key,candidate,anchor,method,matched_aliases,offset=max(
-                matches,key=lambda r:(r[0],r[1],r[2],r[3],-r[4][1]))
+            evidence,train_score,confidence,_,neg_gap,key,candidate,anchor,method,matched_aliases,offset=max(
+                matches,key=lambda r:(r[0],r[1],r[2],r[3],r[4],-r[5][1]))
             name=candidate['tags'].get('name:zh') or candidate['tags'].get('name') or aliases[0]
             row.update(station_name=name,osm_type=candidate['osm_type'],osm_id=candidate['osm_id'],
                        station_longitude=candidate['coord'][0],station_latitude=candidate['coord'][1],
@@ -165,6 +187,9 @@ def map_stations(nodes,ways,relations):
                        identity_matched_aliases=';'.join(matched_aliases),
                        identity_source_tags=json.dumps({k:v for k,v in candidate['tags'].items() if 'name' in k},ensure_ascii=False),
                        city_station_distance_m=round(offset,3) if offset is not None else '',
+                       station_transport_evidence='explicit_train_tag_or_station_member' if train_score==2 else 'mode_unknown_needs_review',
+                       station_raw_tags=json.dumps(candidate['tags'],ensure_ascii=False),
+                       track_node_raw_tags=json.dumps(node_tags[anchor],ensure_ascii=False),
                        identity_status='name_and_city_proximity_checked_not_manual_verification' if offset is not None else 'chinese_name_only_city_context_missing_needs_review')
             if confidence==1:
                 issues.append({'city':city,'issue':'bounded_spatial_match_requires_visual_review','distance_m':-neg_gap})
@@ -179,7 +204,19 @@ def map_stations(nodes,ways,relations):
                                 layout_osm_type=candidate['osm_type'],layout_osm_id=candidate['osm_id'],
                                 layout_source=candidate['source'],layout_status='station_layout_fallback_not_city_center')
         elif found_station:
-            row.update(match_status='station_found_no_reliable_track_match',note=f'No explicit stop or track node within {SNAP_METERS:g} m')
+            evidence,train_score,key,candidate,matched_aliases,offset=max(identity_candidates,
+                key=lambda r:(r[0],r[1],-(r[5] if r[5] is not None else math.inf),-r[2][1]))
+            row.update(station_name=candidate['tags'].get('name:zh') or candidate['tags'].get('name') or aliases[0],
+                osm_type=candidate['osm_type'],osm_id=candidate['osm_id'],source=candidate['source'],
+                station_longitude=candidate['coord'][0],station_latitude=candidate['coord'][1],
+                match_status='station_found_no_reliable_track_match',note=f'Station identified but no permitted explicit stop or actual track node within {SNAP_METERS:g} m; no anchor invented',
+                identity_name_match='chinese_alias' if evidence==2 else 'english_only_with_city_context',
+                identity_matched_aliases=';'.join(matched_aliases),
+                identity_source_tags=json.dumps({k:v for k,v in candidate['tags'].items() if 'name' in k},ensure_ascii=False),
+                city_station_distance_m=round(offset,3) if offset is not None else '',
+                identity_status='station_identified_track_unmatched_needs_review',
+                station_transport_evidence='explicit_train_tag_or_station_member' if train_score==2 else 'mode_unknown_needs_review',
+                station_raw_tags=json.dumps(candidate['tags'],ensure_ascii=False))
         elif rejected_station:
             row.update(match_status='station_identity_candidates_rejected',
                        identity_status='no_identity_candidate_passed',

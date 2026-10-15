@@ -22,8 +22,19 @@ def tag_names(tags):
         names.extend(tags.get(k,'').split(';'))
     return {normalized(s) for s in names if s}
 
+def excluded_transport_mode(tags):
+    """Explicit modes only: names such as 'airport railway' do not decide the mode."""
+    if tags.get('station') in {'subway','light_rail','monorail','tram','funicular'}:
+        return tags['station']
+    for mode in ('subway','light_rail','monorail','tram','funicular'):
+        if tags.get(mode)=='yes': return mode
+    if tags.get('railway') in {'subway','light_rail','monorail','tram','tram_stop','funicular','subway_entrance'}:
+        return tags['railway']
+    return ''
+
 def classify(tags):
     if tags.get('railway')!='rail': return 'exclude','not_rail'
+    if excluded_transport_mode(tags): return 'exclude','explicit_non_heavy_rail_mode'
     if any(tags.get(k) in {'yes','rail'} for k in ['abandoned','disused','construction','proposed']):
         return 'exclude','inactive'
     if tags.get('usage') in {'industrial','military','test'}:

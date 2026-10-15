@@ -1,0 +1,153 @@
+{
+  "input_sha256": {
+    "cities.csv": "f012cf43644fc211b90071bbfcfde8ed3605a91cb3593e29228d6f0140f4395a",
+    "city_edges.csv": "61b99e3dadbe129d9db0203b3f28044c16b054c26698b84061f131285abd242f",
+    "RESULTS.md": "b2462177bef4b124e740ed4e1a7b1d0e641a5bb61b352b0d5252ed6e495329a1",
+    "run_status.json": "93f9535465500ce028caf3a9c2d2de51d3917d9be26fd2e19940173a8e5f0e90",
+    "guangzhou_lanzhou_segments.csv": "7441466cfe23661dad20f205433e31cc70266412eb82cd1fd87b7bde885058a5",
+    "guangzhou_lanzhou_status.json": "f7690c5dc4bf5f23265daa0d668491fc5f8390ac3f3f46a1ce4ebcd3fa4d0075",
+    "station_diagnostics.json": "cf230f39eb7efa45e5a32eb1dec8e6e780268e0ffcf05cb0a472d38011100178",
+    "SCOPE.txt": "832aa6ec2eb1515da9f00c6db2009a98976aa741c5b8ce9af3afbdadb0ba9a7e",
+    "station_candidate_rejections.csv": "aa03a903de924e1b37bfea264ce2cd58e3a2fc1cc385653f324fd3745bce86da",
+    "city_stations.csv": "e239ffee385083d19ffcd1a971dcc0d704d1150ffc1cf255383d74702652e976",
+    "data_quality.json": "1f9cdcdd2e7277c45bc01ca62124e67a787c4346ff24cc7f2446acc9c3d87811"
+  },
+  "city_count": 34,
+  "city_order_matches": true,
+  "edge_count": 351,
+  "invalid_edges": [],
+  "duplicate_city_edges": [],
+  "independently_recomputed_components": [
+    [
+      "北京",
+      "天津",
+      "上海",
+      "重庆",
+      "石家庄",
+      "太原",
+      "呼和浩特",
+      "沈阳",
+      "长春",
+      "哈尔滨",
+      "杭州",
+      "合肥",
+      "南昌",
+      "济南",
+      "郑州",
+      "武汉",
+      "长沙",
+      "广州",
+      "南宁",
+      "成都",
+      "贵阳",
+      "昆明",
+      "拉萨",
+      "兰州",
+      "西宁",
+      "银川",
+      "香港"
+    ],
+    [
+      "南京"
+    ],
+    [
+      "福州"
+    ],
+    [
+      "海口"
+    ],
+    [
+      "西安"
+    ],
+    [
+      "乌鲁木齐"
+    ],
+    [
+      "台北"
+    ],
+    [
+      "澳门"
+    ]
+  ],
+  "component_count": 8,
+  "degree": {
+    "北京": 26,
+    "天津": 26,
+    "上海": 26,
+    "重庆": 26,
+    "石家庄": 26,
+    "太原": 26,
+    "呼和浩特": 26,
+    "沈阳": 26,
+    "长春": 26,
+    "哈尔滨": 26,
+    "南京": 0,
+    "杭州": 26,
+    "合肥": 26,
+    "福州": 0,
+    "南昌": 26,
+    "济南": 26,
+    "郑州": 26,
+    "武汉": 26,
+    "长沙": 26,
+    "广州": 26,
+    "南宁": 26,
+    "海口": 0,
+    "成都": 26,
+    "贵阳": 26,
+    "昆明": 26,
+    "拉萨": 26,
+    "西安": 0,
+    "兰州": 26,
+    "西宁": 26,
+    "银川": 26,
+    "乌鲁木齐": 0,
+    "台北": 0,
+    "香港": 26,
+    "澳门": 0
+  },
+  "mainland_component_is_complete_K27": true,
+  "independent_city_graph_dijkstra_km": 2383.541507726979,
+  "city_graph_dijkstra_city_sequence": [
+    "广州",
+    "兰州"
+  ],
+  "reported_base_graph_km": 2383.541507726979,
+  "difference_from_reported_base_km": 0.0,
+  "algorithmically_mapped_stations": 30,
+  "station_status_counts": {
+    "spatial_match_needs_review": 24,
+    "topology_matched": 6,
+    "station_found_no_reliable_track_match": 3,
+    "no_heavy_rail_representative_selected": 1
+  },
+  "route_segment_count": 55,
+  "segments_sum_km": 2383.541507726978,
+  "segment_sum_difference_km": -9.094947017729282e-13,
+  "adjacent_segment_track_nodes_continuous": true,
+  "segment_endpoint_matches_route_anchors": true,
+  "cumulative_distance_consistent": true,
+  "confirmed_fuzhou_fuzhou_name_collision": false,
+  "confirmed_fuzhou_wrong_transport_mode": true,
+  "source_completed_at": "2026-10-15T02:47:07.542595+00:00",
+  "source_graph_version": 5,
+  "source_station_identity_version": 2,
+  "candidate_mappings_after_rejecting_known_error": 29,
+  "raw_geodesic_recomputation_performed_here": false,
+  "scope": "City/segment tables and optional raw station diagnostics; complete track geometries and PBF have not been independently re-read here.",
+  "confirmed_mapping_error": {
+    "issue": "excluded_transport_mode_stop_used_as_heavy_rail_representative",
+    "city": "福州",
+    "matched_station_object_type": "relation",
+    "matched_station_object_id": "19659201",
+    "track_node_id": 9521844144,
+    "actual_track_node_tags": {
+      "name": "福州火车站",
+      "name:en": "Fuzhou Railway Station",
+      "public_transport": "stop_position",
+      "railway": "stop",
+      "subway": "yes"
+    }
+  },
+  "rejected_fuzhou_mapping_has_city_degree_zero": true
+}
