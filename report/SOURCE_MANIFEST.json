@@ -1,0 +1,95 @@
+{
+  "generated_at_utc": "2026-10-15T02:20:41.373473+00:00",
+  "generated_at_beijing": "2026-10-15T10:20:41.373473+08:00",
+  "analysis_code_commit": "d3a115234a288b57fd46955fb758a882a261f723",
+  "repository": "https://github.com/zyx0309/scutwork",
+  "uploaded_result_files_independently_hashed_here": {
+    "cities.csv": {
+      "bytes": 3789,
+      "sha256": "f012cf43644fc211b90071bbfcfde8ed3605a91cb3593e29228d6f0140f4395a"
+    },
+    "city_stations.csv": {
+      "bytes": 11150,
+      "sha256": "1c19efb7fd023d9e588aba211f46fb31ff5de296887360eb4c41596926344806"
+    },
+    "city_edges.csv": {
+      "bytes": 5796124,
+      "sha256": "61b99e3dadbe129d9db0203b3f28044c16b054c26698b84061f131285abd242f"
+    },
+    "data_quality.json": {
+      "bytes": 126715,
+      "sha256": "78e56e3c253a74562c50c1244f4054dae2db2a0dc0bf9758e4a59be980a01ca5"
+    },
+    "RESULTS.md": {
+      "bytes": 801,
+      "sha256": "810b4dd1717245068bd00a06750575c753d32b0d850c8fd02f0117b01aeb959b"
+    },
+    "run_status.json": {
+      "bytes": 200,
+      "sha256": "71dbdda52a145cad355c29f8baa605c08ac83a3191f945b39a3ca63992c9e10d"
+    },
+    "guangzhou_lanzhou_status.json": {
+      "bytes": 3913,
+      "sha256": "dca7fcf4f7b34691bda5611b7481b6d846013b529fe2861e3f0fcc6bd68af403"
+    },
+    "guangzhou_lanzhou_segments.csv": {
+      "bytes": 61025,
+      "sha256": "7441466cfe23661dad20f205433e31cc70266412eb82cd1fd87b7bde885058a5"
+    }
+  },
+  "original_pbf_provenance_copied_from_user_run_not_rehashed_here": {
+    "china": {
+      "source_url": "https://download.geofabrik.de/asia/china-latest.osm.pbf",
+      "origin": "user_supplied_local",
+      "registered_at": "2026-10-14T13:25:39.468786+00:00",
+      "size": 1608188315,
+      "sha256": "f1c602a55455819262b8183f0c0cb64cd95b7f78cabc3ac98f4e8762d8e80fa6",
+      "verified_header": true,
+      "upstream_checksum_status": "not_checked_offline",
+      "generator": "osmium/1.16.0",
+      "replication_timestamp": "2026-10-13T20:21:31Z",
+      "header_bounds": [
+        [
+          73.41788,
+          14.27437,
+          134.803619,
+          53.65559
+        ]
+      ],
+      "full_pbf_parse_completed": true
+    },
+    "taiwan": {
+      "source_url": "https://download.geofabrik.de/asia/taiwan-latest.osm.pbf",
+      "origin": "user_supplied_local",
+      "registered_at": "2026-10-14T13:25:40.699811+00:00",
+      "size": 327561702,
+      "sha256": "f0854a692a189189fe54fb5e6fb222ad32db7f29bfe0fc26b05343a9d8f2a328",
+      "verified_header": true,
+      "upstream_checksum_status": "not_checked_offline",
+      "generator": "osmium/1.16.0",
+      "replication_timestamp": "2026-10-13T20:21:31Z",
+      "header_bounds": [
+        [
+          118.1036,
+          20.72799,
+          122.9312,
+          26.60305
+        ]
+      ],
+      "full_pbf_parse_completed": true
+    }
+  },
+  "independent_verification_scope": "Exported city graph and segment tables only; no national PBF or full track geometry reread.",
+  "known_confirmed_issue": "Fuzhou city is misidentified as Fuzhou/浮洲 station in Taiwan. Rejected only in the derived audit; original input bytes retained.",
+  "national_run_repeated_after_fix": false,
+  "full_track_geometry_received_here": false,
+  "map_attribution": "© OpenStreetMap contributors / ODbL 1.0",
+  "font": {
+    "name": "Noto Sans SC",
+    "license": "SIL Open Font License 1.1",
+    "source_url": "https://raw.githubusercontent.com/notofonts/noto-cjk/main/Sans/Variable/TTF/Subset/NotoSansSC-VF.ttf",
+    "download_sha256": "d68bafcb48a2707749396aa12bbbd833cb70401f3a9a689fd2902c7e0d295964",
+    "full_font_files_bundled": false,
+    "subset_embedded_in_pdf": true
+  }
+}

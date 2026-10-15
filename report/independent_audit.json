@@ -1,0 +1,142 @@
+{
+  "input_sha256": {
+    "cities.csv": "f012cf43644fc211b90071bbfcfde8ed3605a91cb3593e29228d6f0140f4395a",
+    "city_edges.csv": "61b99e3dadbe129d9db0203b3f28044c16b054c26698b84061f131285abd242f",
+    "RESULTS.md": "810b4dd1717245068bd00a06750575c753d32b0d850c8fd02f0117b01aeb959b",
+    "run_status.json": "71dbdda52a145cad355c29f8baa605c08ac83a3191f945b39a3ca63992c9e10d",
+    "guangzhou_lanzhou_segments.csv": "7441466cfe23661dad20f205433e31cc70266412eb82cd1fd87b7bde885058a5",
+    "guangzhou_lanzhou_status.json": "dca7fcf4f7b34691bda5611b7481b6d846013b529fe2861e3f0fcc6bd68af403",
+    "city_stations.csv": "1c19efb7fd023d9e588aba211f46fb31ff5de296887360eb4c41596926344806",
+    "data_quality.json": "78e56e3c253a74562c50c1244f4054dae2db2a0dc0bf9758e4a59be980a01ca5"
+  },
+  "city_count": 34,
+  "city_order_matches": true,
+  "edge_count": 351,
+  "invalid_edges": [],
+  "duplicate_city_edges": [],
+  "independently_recomputed_components": [
+    [
+      "北京",
+      "天津",
+      "上海",
+      "重庆",
+      "石家庄",
+      "太原",
+      "呼和浩特",
+      "沈阳",
+      "长春",
+      "哈尔滨",
+      "杭州",
+      "合肥",
+      "南昌",
+      "济南",
+      "郑州",
+      "武汉",
+      "长沙",
+      "广州",
+      "南宁",
+      "成都",
+      "贵阳",
+      "昆明",
+      "拉萨",
+      "兰州",
+      "西宁",
+      "银川",
+      "香港"
+    ],
+    [
+      "南京"
+    ],
+    [
+      "福州"
+    ],
+    [
+      "海口"
+    ],
+    [
+      "西安"
+    ],
+    [
+      "乌鲁木齐"
+    ],
+    [
+      "台北"
+    ],
+    [
+      "澳门"
+    ]
+  ],
+  "component_count": 8,
+  "degree": {
+    "北京": 26,
+    "天津": 26,
+    "上海": 26,
+    "重庆": 26,
+    "石家庄": 26,
+    "太原": 26,
+    "呼和浩特": 26,
+    "沈阳": 26,
+    "长春": 26,
+    "哈尔滨": 26,
+    "南京": 0,
+    "杭州": 26,
+    "合肥": 26,
+    "福州": 0,
+    "南昌": 26,
+    "济南": 26,
+    "郑州": 26,
+    "武汉": 26,
+    "长沙": 26,
+    "广州": 26,
+    "南宁": 26,
+    "海口": 0,
+    "成都": 26,
+    "贵阳": 26,
+    "昆明": 26,
+    "拉萨": 26,
+    "西安": 0,
+    "兰州": 26,
+    "西宁": 26,
+    "银川": 26,
+    "乌鲁木齐": 0,
+    "台北": 0,
+    "香港": 26,
+    "澳门": 0
+  },
+  "mainland_component_is_complete_K27": true,
+  "independent_city_graph_dijkstra_km": 2383.541507726979,
+  "city_graph_dijkstra_city_sequence": [
+    "广州",
+    "兰州"
+  ],
+  "reported_base_graph_km": 2383.541507726979,
+  "difference_from_reported_base_km": 0.0,
+  "algorithmically_mapped_stations": 30,
+  "station_status_counts": {
+    "spatial_match_needs_review": 24,
+    "topology_matched": 6,
+    "station_found_no_reliable_track_match": 3,
+    "no_heavy_rail_representative_selected": 1
+  },
+  "route_segment_count": 55,
+  "segments_sum_km": 2383.541507726978,
+  "segment_sum_difference_km": -9.094947017729282e-13,
+  "adjacent_segment_track_nodes_continuous": true,
+  "segment_endpoint_matches_route_anchors": true,
+  "cumulative_distance_consistent": true,
+  "confirmed_fuzhou_fuzhou_name_collision": true,
+  "candidate_mappings_after_rejecting_known_error": 29,
+  "raw_geodesic_recomputation_performed_here": false,
+  "scope": "City graph and segment-table checks only; original track geometries and PBF have not been independently re-read here.",
+  "confirmed_mapping_error": {
+    "city": "福州",
+    "actual_matched_name": "浮洲",
+    "osm_id": "10658521",
+    "osm_type": "relation",
+    "longitude": "121.4447595",
+    "latitude": "25.0041645",
+    "source": "taiwan-latest.osm.pbf",
+    "distance_from_OSM_city_place_m": 246889.75169647232
+  },
+  "rejected_fuzhou_mapping_has_city_degree_zero": true
+}
